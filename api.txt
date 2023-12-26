@@ -1,0 +1,29 @@
+1) Авторизация пользователя в системе
+POST запрос на URL + /api/token/
+В теле отправляется объект: 
+    {"username": "user", "password": "passworduser"}
+
+В случае успешного ответа от сервера придет следующее сообщение, содержащее токены
+    {
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY3NTc1NTA3NywianRpIjoiMDlhMDYwZGY4MmFjNGVhYzg4YmMwNDJlMTA4OTlhZDIiLCJ1c2VyX2lkIjoxfQ.MZrlQdnWRPRtFsfZQxqeeNOTnl1OE3pbka-bzO3-OHg",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc1NjcwNDc3LCJqdGkiOiJjMmRlZWZhMTIwMjM0ZjllYTIxNjUxODFhZDNmNDNlYyIsInVzZXJfaWQiOjF9.MC0bNtXhCDyJyPeSFycDH-XY8nTK85psuax_pFQAhbE"
+    }
+В случае отрицательного ответа:
+    {
+    "detail": "Не найдено активной учетной записи с указанными данными"
+    }
+
+2) Запрос на обновление токенов
+POST запрос на URL + /api/token/refresh/
+В теле отправляется объект:
+    {"refresh" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY3NTc1NzMwNCwianRpIjoiNzc4Yjk2OTNhZWNmNGE1Nzg5NzA0MzQyOTYzYTAxZGEiLCJ1c2VyX2lkIjoxfQ.Nb2yAnYQgraJbmCYo5B9MARRYjdQJGu-chPmMTMYAbg"}
+В случае успешного ответа от сервера придет следующее сообщение, содержащее обновленные токены
+    {
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc1NjcyNzI3LCJqdGkiOiJjYTlkODM1YWE3YTg0NWRhYmVmYzdiNjE1ZjA4OWI3NiIsInVzZXJfaWQiOjF9.dYq7iMQgnO2QemdGPpE9J98C9opjP20i8f54MJFqQpM",
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY3NTc1NzMyNywianRpIjoiNjE5ZDE1M2Y2YjQ4NDdmOWIzYWUxY2YzZjQzZTQ5NGEiLCJ1c2VyX2lkIjoxfQ.p1nS4r8cIxOC8j8Bv8Ug0CptdIJ27wDVg1ADw3i-S1Q"
+    }
+В случае отрицательного ответа:
+    {
+    "detail": "Токен недействителен или просрочен",
+    "code": "token_not_valid"
+    }

@@ -1,0 +1,61 @@
+version: "3.4"
+ 
+services:
+  db:
+    image: postgres:latest
+    container_name: ucup_db
+    env_file: ./.env
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/backup:/backup
+    ports:
+      - "5432:5432"
+ 
+  app:
+    container_name: ucup_app
+    image: 
+    env_file: ./.env
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    command: python manage.py runserver 8001 #/start
+    links:
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis
+ 
+  pgadmin:
+    container_name: ucup_pgadmin
+    image: dpage/pgadmin4
+    env_file: ./.env
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    user: root
+
+# services:
+#   postgres:
+#     image: postgres:latest
+#     container_name: my-postgres-container
+#     environment:
+#       POSTGRES_DB: ucup
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: 12345678
+#     volumes:
+#       - ./data:/var/lib/postgresql/data
+# web:
+#     build: .
+#     command: python manage.py runserver 0.0.0.0:8000
+#     volumes:
+#       - .:/code
+#     ports:
+#       - "8000:8000"
+#     environment:
+#       - POSTGRES_NAME=ucup
+#       - POSTGRES_USER=postgres
+#       - POSTGRES_PASSWORD=12345678
+#     depends_on:
+#       - db
