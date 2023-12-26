@@ -37,7 +37,8 @@ class VendDocListView(generics.ListAPIView):
 class VendorsViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny] 
     queryset = Vendors.objects.all()
-    serializer_class = BasePagination
+    serializer_class = VendorsSerializer
+    pagination_class = BasePagination
 
     def list(self, request, *args, **kwargs):
         # Проверяем наличие параметра fields в запросе

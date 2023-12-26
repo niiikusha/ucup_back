@@ -16,3 +16,14 @@ pip freeze > requirements.txt
 6) настройка vscode 
 mkdir .vscode
 7)  python manage.py runserver 192.168.6.168:8001
+8) для лены:
+    ссылка на фронте:
+    # http://127.0.0.1:8001 на работе со своего
+    # http://192.168.6.168:8001 на работе с вероникиного
+    # http://127.0.0.1:8000 дома
+    python -m venv .venv
+    .venv\Scripts\activate
+    cd LAMA_ucup
+    python manage.py runserver 8001 
+    или 
+    python manage.py runserver
