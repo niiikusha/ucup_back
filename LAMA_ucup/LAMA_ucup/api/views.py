@@ -23,8 +23,8 @@ class VendorsListView(generics.ListAPIView):
     queryset = Vendors.objects.all() #данные которые будут возвращаться
     serializer_class =  VendorsSerializer #обрабатывает queryset
 
-class VendDocPagination(PageNumberPagination):
-    page_size = 1000  # Количество записей на странице
+class BasePagination(PageNumberPagination):
+    page_size = 500  # Количество записей на странице
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -32,12 +32,12 @@ class VendDocListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     queryset = Venddoc.objects.all()
     serializer_class = VendDocSerializer
-    pagination_class = VendDocPagination
+    pagination_class = BasePagination
 
 class VendorsViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny] 
     queryset = Vendors.objects.all()
-    serializer_class = VendorsSerializer
+    serializer_class = BasePagination
 
     def list(self, request, *args, **kwargs):
         # Проверяем наличие параметра fields в запросе
