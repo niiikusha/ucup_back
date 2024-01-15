@@ -1,4 +1,4 @@
-/LAMA_ucup/.env
+#/LAMA_ucup/.env
 # Django #
 *.log
 *.pot

@@ -59,7 +59,7 @@ class VendorsViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
     
 
-class KuListView(generics.ListCreateAPIView):
+class KuListView(generics.ListCreateAPIView, generics.DestroyAPIView):
     permission_classes = [AllowAny] 
     queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
