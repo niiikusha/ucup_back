@@ -8,6 +8,10 @@ class EntitiesSerializer(serializers.ModelSerializer):
         model = Entities
         fields = '__all__'
        
+class KuGraphSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = KuGraph
+        fields = '__all__'
 
 class KuSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,12 +27,12 @@ class UserSerializer(serializers.ModelSerializer):
 class BrandClassifierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brandclassifier
-        fields = ['brand_name']
+        fields = '__all__'
 
 class ClassifierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Classifier
-        fields = ['l3_name']
+        fields = '__all__'
 
 class ProductsSerializer(serializers.ModelSerializer):
     brand_name = serializers.SerializerMethodField()

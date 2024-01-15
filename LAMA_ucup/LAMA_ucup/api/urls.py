@@ -26,6 +26,10 @@ urlpatterns = [
 
     path('kulist', KuListView.as_view()),
     path('ku/<int:pk>/', KuAPIUpdate.as_view()),
+    path('kudetail/<int:pk>/', KuDetailView.as_view()),
+
+    path('graphlist', GraphListView.as_view()), 
+    path('graphdetail/<int:pk>/', GraphDetailView.as_view()),
 
     path('productslist', ProductsListView.as_view()),
     path('productsfilter', products_filter, name ='products_filter'),
@@ -34,5 +38,8 @@ urlpatterns = [
     path('vendorlist/', VendorsViewSet.as_view(actions={'get': 'list'}), name='vendor-list'),
     #path('vendorlist1', VendorsListView.as_view()),
     
+    path('classifierlist',  ClassifierListView.as_view()),
+    path('brandlist', BrandClassifierListView.as_view()),
+
     path('me/', me_view),
 ]

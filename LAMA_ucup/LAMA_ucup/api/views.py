@@ -18,6 +18,16 @@ class EntitiesListView(generics.ListAPIView):
     queryset = Entities.objects.all() #данные которые будут возвращаться
     serializer_class = EntitiesSerializer #обрабатывает queryset
 
+class BrandClassifierListView(generics.ListAPIView):
+    permission_classes = [AllowAny] 
+    queryset = Brandclassifier.objects.all() #данные которые будут возвращаться
+    serializer_class = BrandClassifierSerializer #обрабатывает queryset
+
+class ClassifierListView(generics.ListAPIView):
+    permission_classes = [AllowAny] 
+    queryset = Classifier.objects.all() #данные которые будут возвращаться
+    serializer_class = ClassifierSerializer #обрабатывает queryset
+
 class VendorsListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Vendors.objects.all() #данные которые будут возвращаться
@@ -69,6 +79,21 @@ class KuAPIUpdate(generics.RetrieveUpdateAPIView):
     queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
     # authentication_classes = (TokenAuthentication, )
+
+class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление/обновление/удаление в одном
+    permission_classes = [AllowAny]
+    queryset = Ku.objects.all()
+    serializer_class = KuSerializer
+
+class GraphListView(generics.ListAPIView): 
+    permission_classes = [AllowAny]
+    queryset = KuGraph.objects.all()
+    serializer_class = KuGraphSerializer
+
+class GraphDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление/обновлени/удаление в одном
+    permission_classes = [AllowAny]
+    queryset = KuGraph.objects.all()
+    serializer_class = KuGraphSerializer
 
 class ProductsListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
