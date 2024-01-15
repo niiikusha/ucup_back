@@ -34,7 +34,7 @@ class VendorsListView(generics.ListAPIView):
     serializer_class =  VendorsSerializer #обрабатывает queryset
 
 class BasePagination(PageNumberPagination):
-    page_size = 500  # Количество записей на странице
+    page_size = 100  # Количество записей на странице
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
