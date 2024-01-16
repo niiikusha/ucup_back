@@ -60,7 +60,11 @@ class VendorsSerializer(serializers.ModelSerializer):
         fields = ['entityid', 'vendorid', 'name', 'urasticname', 'inn_kpp', 
                 'directorname', 'urasticadress', 'account', 'bankname', 
                 'bankbik', 'corraccount', 'dirparty' ]
-       
+    
+class VendorsNameSerializer(serializers.ModelSerializer):
+     class Meta:
+        model = Vendors
+        fields = ['entityid','vendorid', 'name']
 
 class VendDocSerializer(serializers.ModelSerializer):
     class Meta:

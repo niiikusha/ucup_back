@@ -27,3 +27,6 @@ mkdir .vscode
     python manage.py runserver 8001 
     или 
     python manage.py runserver
+9) миграции:
+ python manage.py makemigrations
+ python manage.py migrate

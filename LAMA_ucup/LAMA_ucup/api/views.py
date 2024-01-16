@@ -28,10 +28,23 @@ class ClassifierListView(generics.ListAPIView):
     queryset = Classifier.objects.all() #данные которые будут возвращаться
     serializer_class = ClassifierSerializer #обрабатывает queryset
 
-class VendorsListView(generics.ListAPIView):
+class VendorsListView(generics.ListAPIView): #фильтрация по юр лицу
     permission_classes = [AllowAny] 
-    queryset = Vendors.objects.all() #данные которые будут возвращаться
-    serializer_class =  VendorsSerializer #обрабатывает queryset
+    serializer_class =  VendorsNameSerializer #обрабатывает queryset
+
+    def get_queryset(self):
+        entityid = self.request.query_params.get('entityid', None)
+        
+        # Проверяем, предоставлен ли entityid в параметрах запроса
+        if entityid:
+            # Фильтруем поставщиков на основе предоставленного entityid
+            queryset = Vendors.objects.filter(entityid=entityid)
+        else:
+            # Если entityid не предоставлен, возвращаем всех поставщиков
+            queryset = Vendors.objects.all()
+    
+        return queryset
+
 
 class BasePagination(PageNumberPagination):
     page_size = 100  # Количество записей на странице
@@ -67,7 +80,7 @@ class VendorsViewSet(viewsets.ModelViewSet):
         self.serializer_class = serializer_class
 
         return super().list(request, *args, **kwargs)
-    
+
 
 class KuListView(generics.ListCreateAPIView, generics.DestroyAPIView):
     permission_classes = [AllowAny] 

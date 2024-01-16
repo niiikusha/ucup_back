@@ -96,7 +96,6 @@ class Invoices(models.Model):
 
 
 class Ku(models.Model):
-    ku_id = models.BigIntegerField(db_column='KU_id', primary_key=True)  # Field name made lowercase.
     vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
@@ -105,6 +104,7 @@ class Ku(models.Model):
     date_actual = models.DateField(db_column='Date_actual', blank=True, null=True)  # Field name made lowercase.
     base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
+    ku_id = models.CharField(db_column='KU_id', primary_key=True)  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -113,7 +113,6 @@ class Ku(models.Model):
 
 class KuGraph(models.Model):
     graph_id = models.BigIntegerField(db_column='Graph_id', primary_key=True)  # Field name made lowercase.
-    ku = models.ForeignKey(Ku, models.DO_NOTHING, db_column='KU_id')  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end')  # Field name made lowercase.
@@ -123,6 +122,7 @@ class KuGraph(models.Model):
     sum_bonus = models.FloatField(db_column='Sum_bonus', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
     vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
+    ku = models.ForeignKey(Ku, models.DO_NOTHING, db_column='Ku_id')  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -173,7 +173,7 @@ class Venddoclines(models.Model):
 
 
 class Vendors(models.Model):
-    entityid = models.CharField(db_column='EntityID', max_length=4, blank=True, null=True)  # Field name made lowercase.
+    entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='EntityID', blank=True, null=True)  # Field name made lowercase.
     vendorid = models.CharField(db_column='VendorId', primary_key=True, max_length=20)  # Field name made lowercase.
     name = models.CharField(db_column='Name', max_length=100, blank=True, null=True)  # Field name made lowercase.
     urasticname = models.CharField(db_column='UrasticName', max_length=100, blank=True, null=True)  # Field name made lowercase.
