@@ -14,10 +14,10 @@ from rest_framework.parsers import JSONParser
 from ..models import Entities, Ku
     
 class BasePagination(PageNumberPagination):
-    page_size = 100  # Количество записей на странице
+    page_size = 50  # Количество записей на странице
     page_size_query_param = 'page_size'
     max_page_size = 1000
-    
+
 class EntitiesListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Entities.objects.all() #данные которые будут возвращаться
@@ -84,10 +84,27 @@ class VendorsViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class KuListView(generics.ListCreateAPIView, generics.DestroyAPIView):
+class KuListView(generics.ListCreateAPIView):
     permission_classes = [AllowAny] 
     queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
+
+    def perform_create(self, serializer):
+        # Вызвать метод save у сериализатора для создания экземпляра Ku
+        instance = serializer.save()
+
+        # Вызвать метод calculate_base для установки значения base
+        instance.calculate_base()
+
+    # def get_queryset(self):
+    #     # Получаем выбранную сущность из данных запроса
+    #     selected_entity_id = self.request.data.get('entity_id')
+
+    #     # Фильтруем вендоров на основе выбранной сущности
+    #     if selected_entity_id:
+    #         return Ku.objects.filter(entity__id=selected_entity_id)
+    #     else:
+    #         return Ku.objects.all()
 
 class KuAPIUpdate(generics.RetrieveUpdateAPIView):
     permission_classes = [AllowAny] # (IsAuthenticated,)  
@@ -100,7 +117,7 @@ class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
     queryset = Ku.objects.all()
     serializer_class = KuSerializer
 
-class GraphListView(generics.ListAPIView): 
+class GraphListView(generics.ListCreateAPIView): 
     permission_classes = [AllowAny]
     queryset = KuGraph.objects.all()
     serializer_class = KuGraphSerializer

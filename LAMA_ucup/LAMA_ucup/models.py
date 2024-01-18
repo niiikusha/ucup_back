@@ -102,13 +102,35 @@ class Ku(models.Model):
     date_end = models.DateField(db_column='Date_end', blank=True, null=True)  # Field name made lowercase.
     status = models.CharField(db_column='Status', max_length=20)  # Field name made lowercase.
     date_actual = models.DateField(db_column='Date_actual', blank=True, null=True)  # Field name made lowercase.
-    base = models.FloatField(db_column='Base')  # Field name made lowercase.
+    base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
     ku_id = models.CharField(db_column='KU_id', primary_key=True, editable=False)  # Field name made lowercase.
+    entity = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'KU'
+
+    def calculate_base(self): #расчет базы2
+        # Найти строки в Venddoc, соответствующие условиям
+        venddoc_rows = Venddoc.objects.filter(
+            vendor_id=self.vendor,
+            entity_id=self.entity,
+            invoice_date__range=[self.date_start, self.date_end]
+        )
+
+        if venddoc_rows.exists():
+            # Взять первую строку, найденную в Venddoc
+            venddoc_row = venddoc_rows.first()
+
+            # Найти соответствующую строку в Venddoclines
+            venddoclines_row = Venddoclines.objects.get(docid=venddoc_row.docid)
+
+            # Установить значение base равным значению amount
+            self.base = venddoclines_row.amount
+        else:
+            # Если не найдено соответствующих строк, установить base в 0 или другое значение по умолчанию
+            self.base = 0
 
     def save(self, *args, **kwargs):
         # Check if ku_id is not set
