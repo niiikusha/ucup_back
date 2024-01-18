@@ -13,6 +13,11 @@ from rest_framework.parsers import JSONParser
 
 from ..models import Entities, Ku
     
+class BasePagination(PageNumberPagination):
+    page_size = 100  # Количество записей на странице
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+    
 class EntitiesListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Entities.objects.all() #данные которые будут возвращаться
@@ -22,11 +27,13 @@ class BrandClassifierListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Brandclassifier.objects.all() #данные которые будут возвращаться
     serializer_class = BrandClassifierSerializer #обрабатывает queryset
+    pagination_class = BasePagination
 
 class ClassifierListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Classifier.objects.all() #данные которые будут возвращаться
     serializer_class = ClassifierSerializer #обрабатывает queryset
+    pagination_class = BasePagination
 
 class VendorsListView(generics.ListAPIView): #фильтрация по юр лицу
     permission_classes = [AllowAny] 
@@ -45,11 +52,6 @@ class VendorsListView(generics.ListAPIView): #фильтрация по юр л�
     
         return queryset
 
-
-class BasePagination(PageNumberPagination):
-    page_size = 100  # Количество записей на странице
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
 
 class VendDocListView(generics.ListAPIView):
     permission_classes = [AllowAny]
@@ -112,6 +114,7 @@ class ProductsListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Products.objects.all() #данные которые будут возвращаться
     serializer_class = ProductsSerializer #обрабатывает queryset
+    pagination_class = BasePagination
 
 @api_view(['GET'])
 def products_filter(request): 

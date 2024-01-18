@@ -102,17 +102,27 @@ class Ku(models.Model):
     date_end = models.DateField(db_column='Date_end', blank=True, null=True)  # Field name made lowercase.
     status = models.CharField(db_column='Status', max_length=20)  # Field name made lowercase.
     date_actual = models.DateField(db_column='Date_actual', blank=True, null=True)  # Field name made lowercase.
-    base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
+    base = models.FloatField(db_column='Base')  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
-    ku_id = models.CharField(db_column='KU_id', primary_key=True)  # Field name made lowercase.
+    ku_id = models.CharField(db_column='KU_id', primary_key=True, editable=False)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'KU'
+
+    def save(self, *args, **kwargs):
+        # Check if ku_id is not set
+        if not self.ku_id:
+            # Get the count of existing KUs
+            count = Ku.objects.count() + 1
+            # Format the ku_id using zfill to pad with zeros
+            self.ku_id = f'КУ{count:05}'
+            
+        super().save(*args, **kwargs)
 
 
 class KuGraph(models.Model):
-    graph_id = models.BigIntegerField(db_column='Graph_id', primary_key=True)  # Field name made lowercase.
+    graph_id = models.AutoField(db_column='Graph_id', primary_key=True)  # Используем AutoField для автоматического заполнения  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end')  # Field name made lowercase.
