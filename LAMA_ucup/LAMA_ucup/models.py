@@ -94,9 +94,27 @@ class Invoices(models.Model):
         managed = False
         db_table = 'Invoices'
 
+class Vendors(models.Model):
+    vendorid = models.CharField(db_column='VendorId', primary_key=True, max_length=20)  # Field name made lowercase.
+    entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='EntityID', blank=True, null=True)  # Field name made lowercase.
+    name = models.CharField(db_column='Name', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    urasticname = models.CharField(db_column='UrasticName', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    inn_kpp = models.CharField(db_column='INN/KPP', max_length=121, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    directorname = models.CharField(db_column='DirectorName', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    urasticadress = models.CharField(db_column='UrasticAdress', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    account = models.CharField(db_column='Account', max_length=35, blank=True, null=True)  # Field name made lowercase.
+    bankname = models.CharField(db_column='BankName', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    bankbik = models.CharField(db_column='BankBik', max_length=15, blank=True, null=True)  # Field name made lowercase.
+    corraccount = models.CharField(db_column='CorrAccount', max_length=35, blank=True, null=True)  # Field name made lowercase.
+    dirparty = models.BigIntegerField(db_column='DirParty', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'Vendors'
 
 class Ku(models.Model):
     vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
+    ku_id = models.CharField(db_column='KU_id', primary_key=True, editable=False)  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end', blank=True, null=True)  # Field name made lowercase.
@@ -104,42 +122,38 @@ class Ku(models.Model):
     date_actual = models.DateField(db_column='Date_actual', blank=True, null=True)  # Field name made lowercase.
     base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
-    ku_id = models.CharField(db_column='KU_id', primary_key=True, editable=False)  # Field name made lowercase.
-    entity = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')
+    entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')
+    
 
     class Meta:
         managed = False
         db_table = 'KU'
 
-    def calculate_base(self): #расчет базы2
+    def calculate_base(self): #расчет базы по всем товарам всех накладных
         # Найти строки в Venddoc, соответствующие условиям
         venddoc_rows = Venddoc.objects.filter(
             vendor_id=self.vendor,
-            entity_id=self.entity,
+            entity=self.entityid,
             invoice_date__range=[self.date_start, self.date_end]
         )
+    
+        total_base = 0
+        # Итерировать по всем найденным строкам в Venddoc
+        for venddoc_row in venddoc_rows:
+        # Найти все соответствующие строки в Venddoclines
+            venddoclines_rows = Venddoclines.objects.filter(docid=venddoc_row.docid)
+        # Итерировать по всем найденным строкам в Venddoclines
+            for venddoclines_row in venddoclines_rows:
+                # Добавить значение amount к общей базе
+                total_base += venddoclines_row.amount
+    # Установить значение base равным общей базе
+        self.base = total_base
+        self.save()
 
-        if venddoc_rows.exists():
-            # Взять первую строку, найденную в Venddoc
-            venddoc_row = venddoc_rows.first()
-
-            # Найти соответствующую строку в Venddoclines
-            venddoclines_row = Venddoclines.objects.get(docid=venddoc_row.docid)
-
-            # Установить значение base равным значению amount
-            self.base = venddoclines_row.amount
-        else:
-            # Если не найдено соответствующих строк, установить base в 0 или другое значение по умолчанию
-            self.base = 0
-
-    def save(self, *args, **kwargs):
-        # Check if ku_id is not set
+    def save(self, *args, **kwargs): #создание id КУ
         if not self.ku_id:
-            # Get the count of existing KUs
             count = Ku.objects.count() + 1
-            # Format the ku_id using zfill to pad with zeros
             self.ku_id = f'КУ{count:05}'
-            
         super().save(*args, **kwargs)
 
 
@@ -173,8 +187,8 @@ class Products(models.Model):
 
 
 class Venddoc(models.Model):
-    vendor_id = models.CharField(db_column='Vendor_id')  # Field name made lowercase.
-    entity_id = models.CharField(db_column='Entity_id')  # Field name made lowercase.
+    vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
+    entity = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
     docid = models.CharField(db_column='DocID', blank=True, null=True)  # Field name made lowercase.
     doctype = models.CharField(db_column='DocType')  # Field name made lowercase.
     invoice_name = models.CharField(db_column='Invoice_name')  # Field name made lowercase.
@@ -204,23 +218,7 @@ class Venddoclines(models.Model):
         db_table = 'VendDocLines'
 
 
-class Vendors(models.Model):
-    entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='EntityID', blank=True, null=True)  # Field name made lowercase.
-    vendorid = models.CharField(db_column='VendorId', primary_key=True, max_length=20)  # Field name made lowercase.
-    name = models.CharField(db_column='Name', max_length=100, blank=True, null=True)  # Field name made lowercase.
-    urasticname = models.CharField(db_column='UrasticName', max_length=100, blank=True, null=True)  # Field name made lowercase.
-    inn_kpp = models.CharField(db_column='INN/KPP', max_length=121, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    directorname = models.CharField(db_column='DirectorName', max_length=100, blank=True, null=True)  # Field name made lowercase.
-    urasticadress = models.CharField(db_column='UrasticAdress', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    account = models.CharField(db_column='Account', max_length=35, blank=True, null=True)  # Field name made lowercase.
-    bankname = models.CharField(db_column='BankName', max_length=100, blank=True, null=True)  # Field name made lowercase.
-    bankbik = models.CharField(db_column='BankBik', max_length=15, blank=True, null=True)  # Field name made lowercase.
-    corraccount = models.CharField(db_column='CorrAccount', max_length=35, blank=True, null=True)  # Field name made lowercase.
-    dirparty = models.BigIntegerField(db_column='DirParty', blank=True, null=True)  # Field name made lowercase.
 
-    class Meta:
-        managed = False
-        db_table = 'Vendors'
 
 
 class AuthGroup(models.Model):

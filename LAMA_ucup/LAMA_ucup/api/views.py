@@ -38,6 +38,7 @@ class ClassifierListView(generics.ListAPIView):
 class VendorsListView(generics.ListAPIView): #фильтрация по юр лицу
     permission_classes = [AllowAny] 
     serializer_class =  VendorsNameSerializer #обрабатывает queryset
+    pagination_class = BasePagination
 
     def get_queryset(self):
         entityid = self.request.query_params.get('entityid', None)
