@@ -6,7 +6,10 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
 
+from django.forms import ValidationError
 
 class Article(models.Model):
     name = models.CharField(blank=True, null=True)
@@ -123,7 +126,7 @@ class Ku(models.Model):
     base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
     entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')
-    
+    _count = 0  # Статическая переменная
 
     class Meta:
         managed = False
@@ -136,7 +139,6 @@ class Ku(models.Model):
             entity=self.entityid,
             invoice_date__range=[self.date_start, self.date_end]
         )
-    
         total_base = 0
         # Итерировать по всем найденным строкам в Venddoc
         for venddoc_row in venddoc_rows:
@@ -146,14 +148,22 @@ class Ku(models.Model):
             for venddoclines_row in venddoclines_rows:
                 # Добавить значение amount к общей базе
                 total_base += venddoclines_row.amount
-    # Установить значение base равным общей базе
+        # Установить значение base равным общей базе
         self.base = total_base
         self.save()
 
     def save(self, *args, **kwargs): #создание id КУ
         if not self.ku_id:
-            count = Ku.objects.count() + 1
-            self.ku_id = f'КУ{count:05}'
+            Ku._count += 1
+            #count = Ku.objects.count() + 1
+            self.ku_id = f'KY{Ku._count:05}'
+        
+        if not self.date_end or self.date_end > self.date_start + relativedelta(years=2): #проверка даты окончания
+            self.date_actual = self.date_start + relativedelta(years=2)
+
+        if self.date_end < self.date_start:
+            raise ValidationError("Дата окончания не должна быть раньше даты начала")
+        
         super().save(*args, **kwargs)
 
 

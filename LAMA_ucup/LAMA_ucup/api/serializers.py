@@ -6,7 +6,8 @@ from ..models import *
 class EntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entities
-        fields = '__all__'
+        fields = ['entityid', 'directorname', 'urasticname', 'name', 'urasticaddress',
+                  'inn_kpp', 'bankname', 'account', 'corraccount', 'bankbink', 'mergeid']
        
 class KuGraphSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,9 +68,26 @@ class VendorsNameSerializer(serializers.ModelSerializer):
         fields = ['entityid','vendorid', 'name']
 
 class VendDocSerializer(serializers.ModelSerializer):
+    entity_name = serializers.SerializerMethodField()
+    vendor_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Venddoc
-        fields = '__all__'
+        fields = ['vendor', 'vendor_name', 'entity', 'entity_name', 'docid', 'doctype', 'invoice_name', 'invoice_number',
+                  'invoice_date', 'purch_number', 'purch_date', 'invoicestatus', 'invoice_id']
+        
+    def get_entity_name(self, obj):
+        try:
+            return obj.entity.name if obj.entity else None
+        except Entities.DoesNotExist:
+            return None
+
+    def get_vendor_name(self, obj):
+        try:
+            return obj.vendor.name if obj.vendor else None
+        except Vendors.DoesNotExist:
+            return None
+
       
 
 class VendDocLinesSerializer(serializers.ModelSerializer):
