@@ -6,7 +6,7 @@ from ..models import *
 class EntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entities
-        fields = ['entityid', 'directorname', 'urasticname', 'name', 'urasticaddress',
+        fields = ['entity_id', 'directorname', 'urasticname', 'name', 'urasticaddress',
                   'inn_kpp', 'bankname', 'account', 'corraccount', 'bankbink', 'mergeid']
        
 class KuGraphSerializer(serializers.ModelSerializer):
@@ -60,13 +60,13 @@ class VendorsSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Vendors
-        fields = ['vendorid', 'name', 'urasticname', 'inn_kpp', 
+        fields = ['vendor_id', 'name', 'urasticname', 'inn_kpp', 
                 'directorname', 'urasticadress', 'account', 'bankname', 
-                'bankbik', 'corraccount', 'dirparty', 'entityid', 'entity_name' ]
+                'bankbik', 'corraccount', 'dirparty', 'entity_id', 'entity_name' ]
         
     def get_entity_name(self, obj):
         try:
-            return obj.entityid.name if obj.entityid else None
+            return obj.entity_id.name if obj.entity_id else None
         except Entities.DoesNotExist:
             return None
     
@@ -74,7 +74,7 @@ class VendorsSerializer(serializers.ModelSerializer):
 class VendorsNameSerializer(serializers.ModelSerializer):
      class Meta:
         model = Vendors
-        fields = ['entityid','vendorid', 'name']
+        fields = ['entityid','vendor_id', 'name']
 
 class VendDocSerializer(serializers.ModelSerializer):
     entity_name = serializers.SerializerMethodField()
@@ -82,18 +82,19 @@ class VendDocSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Venddoc
-        fields = ['vendor', 'vendor_name', 'entity', 'entity_name', 'docid', 'doctype', 'invoice_name', 'invoice_number',
-                  'invoice_date', 'purch_number', 'purch_date', 'invoicestatus', 'invoice_id']
+        fields = ['invoice_id','vendor_id', 'vendor_name', 'entity_id', 'entity_name','docid', 'doctype', 'invoice_name', 'invoice_number',
+                  'invoice_date', 'purch_number', 'purch_date', 'invoicestatus']
+        
         
     def get_entity_name(self, obj):
         try:
-            return obj.entity.name if obj.entity else None
+            return obj.entity_id.name if obj.entity_id else None
         except Entities.DoesNotExist:
             return None
 
     def get_vendor_name(self, obj):
         try:
-            return obj.vendor.name if obj.vendor else None
+            return obj.vendor_id.name if obj.vendor_id else None
         except Vendors.DoesNotExist:
             return None
 

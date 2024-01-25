@@ -40,12 +40,12 @@ class VendorsNameFilterView(generics.ListAPIView): #фильтрация по ю
     pagination_class = BasePagination
 
     def get_queryset(self):
-        entityid = self.request.query_params.get('entityid', None)
+        entity_id = self.request.query_params.get('entity_id', None)
         
         # Проверяем, предоставлен ли entityid в параметрах запроса
-        if entityid:
+        if entity_id:
             # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = Vendors.objects.filter(entityid=entityid)
+            queryset = Vendors.objects.filter(entityid=entity_id)
         else:
             # Если entityid не предоставлен, возвращаем всех поставщиков
             queryset = Vendors.objects.all()
@@ -55,26 +55,40 @@ class VendorsNameFilterView(generics.ListAPIView): #фильтрация по ю
 
 class VendDocListView(generics.ListAPIView):
     permission_classes = [AllowAny]
-    queryset = Venddoc.objects.all()
+    
     serializer_class = VendDocSerializer
     pagination_class = BasePagination
 
+    def get_queryset(self):
+        queryset = Venddoc.objects.all().order_by('vendor_id')
+        entity_id = self.request.query_params.get('entity_id', None)
+        vendor_id = self.request.query_params.get('vendor_id', None)
+        
+        # Проверяем, предоставлен ли entityid в параметрах запроса
+        if entity_id is not None:
+            # Фильтруем поставщиков на основе предоставленного entityid
+            queryset = queryset.filter(entity_id=entity_id).order_by('vendor_id')
+        if vendor_id is not None:
+            queryset = queryset.filter(vendor_id=vendor_id).order_by('vendor_id')
+        
+        return queryset
+
 class VendorsListViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny] 
-    queryset = Vendors.objects.all().order_by('vendorid')
+    queryset = Vendors.objects.all().order_by('vendor_id')
     serializer_class = VendorsSerializer
     pagination_class = BasePagination
     
     def get_queryset(self):
-        entityid = self.request.query_params.get('entityid', None)
+        entity_id = self.request.query_params.get('entity_id', None)
         
         # Проверяем, предоставлен ли entityid в параметрах запроса
-        if entityid:
+        if entity_id:
             # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = Vendors.objects.filter(entityid=entityid)
+            queryset = Vendors.objects.filter(entity_id=entity_id).order_by('vendor_id')
         else:
             # Если entityid не предоставлен, возвращаем всех поставщиков
-            queryset = Vendors.objects.all()
+            queryset = Vendors.objects.all().order_by('vendor_id')
     
         return queryset
     

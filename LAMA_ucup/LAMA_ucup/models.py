@@ -57,7 +57,7 @@ class Classifier(models.Model):
 
 
 class Entities(models.Model):
-    entityid = models.CharField(db_column='EntityId', primary_key=True, max_length=4)  # Field name made lowercase.
+    entity_id = models.CharField(db_column='Entity_id', primary_key=True, max_length=4)  # Field name made lowercase.
     directorname = models.CharField(db_column='DirectorName', max_length=100, blank=True, null=True)  # Field name made lowercase.
     urasticname = models.CharField(db_column='UrasticName', max_length=100)  # Field name made lowercase.
     name = models.CharField(db_column='Name', max_length=100)  # Field name made lowercase.
@@ -98,8 +98,8 @@ class Invoices(models.Model):
         db_table = 'Invoices'
 
 class Vendors(models.Model):
-    vendorid = models.CharField(db_column='VendorId', primary_key=True, max_length=20)  # Field name made lowercase.
-    entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='EntityID', blank=True, null=True)  # Field name made lowercase.
+    vendor_id = models.CharField(db_column='Vendor_id', primary_key=True, max_length=20)  # Field name made lowercase.
+    entity_id = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id', blank=True, null=True)  # Field name made lowercase.
     name = models.CharField(db_column='Name', max_length=100, blank=True, null=True)  # Field name made lowercase.
     urasticname = models.CharField(db_column='UrasticName', max_length=100, blank=True, null=True)  # Field name made lowercase.
     inn_kpp = models.CharField(db_column='INN/KPP', max_length=121, blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
@@ -116,8 +116,9 @@ class Vendors(models.Model):
         db_table = 'Vendors'
 
 class Ku(models.Model):
-    vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
     ku_id = models.CharField(db_column='KU_id', primary_key=True, editable=False)  # Field name made lowercase.
+    vendor_id = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase. 
+    entity_id = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end', blank=True, null=True)  # Field name made lowercase.
@@ -125,7 +126,6 @@ class Ku(models.Model):
     date_actual = models.DateField(db_column='Date_actual', blank=True, null=True)  # Field name made lowercase.
     base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
-    entityid = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')
     _count = 0  # Статическая переменная
 
     class Meta:
@@ -135,8 +135,8 @@ class Ku(models.Model):
     def calculate_base(self): #расчет базы по всем товарам всех накладных
         # Найти строки в Venddoc, соответствующие условиям
         venddoc_rows = Venddoc.objects.filter(
-            vendor_id=self.vendor,
-            entity=self.entityid,
+            vendor_id=self.vendor_id,
+            entity_id=self.entity_id,
             invoice_date__range=[self.date_start, self.date_end]
         )
         total_base = 0
@@ -169,6 +169,8 @@ class Ku(models.Model):
 
 class KuGraph(models.Model):
     graph_id = models.AutoField(db_column='Graph_id', primary_key=True)  # Используем AutoField для автоматического заполнения  # Field name made lowercase.
+    vendor_id = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
+    ku = models.ForeignKey(Ku, models.DO_NOTHING, db_column='Ku_id')  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end')  # Field name made lowercase.
@@ -177,8 +179,6 @@ class KuGraph(models.Model):
     sum_calc = models.FloatField(db_column='Sum_calc', blank=True, null=True)  # Field name made lowercase.
     sum_bonus = models.FloatField(db_column='Sum_bonus', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
-    vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
-    ku = models.ForeignKey(Ku, models.DO_NOTHING, db_column='Ku_id')  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -197,8 +197,8 @@ class Products(models.Model):
 
 
 class Venddoc(models.Model):
-    vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
-    entity = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
+    vendor_id = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
+    entity_id = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
     docid = models.CharField(db_column='DocID', blank=True, null=True)  # Field name made lowercase.
     doctype = models.CharField(db_column='DocType')  # Field name made lowercase.
     invoice_name = models.CharField(db_column='Invoice_name')  # Field name made lowercase.

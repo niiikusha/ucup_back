@@ -34,7 +34,7 @@ urlpatterns = [
     path('productslist', ProductsListView.as_view()),
     path('productsfilter', products_filter, name ='products_filter'),
 
-    path('venddoclist', VendDocListView.as_view()),
+    path('venddoclist/', VendDocListView.as_view()),
 
     path('vendorlist/', VendorsListViewSet.as_view(actions={'get': 'list'}), name='vendor-list'),
     path('vendorfilter/', VendorsNameFilterView.as_view()),
