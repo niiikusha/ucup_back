@@ -56,11 +56,20 @@ class ProductsSerializer(serializers.ModelSerializer):
             return None
 
 class VendorsSerializer(serializers.ModelSerializer):
-     class Meta:
+    entity_name = serializers.SerializerMethodField()
+        
+    class Meta:
         model = Vendors
-        fields = ['entityid', 'vendorid', 'name', 'urasticname', 'inn_kpp', 
+        fields = ['vendorid', 'name', 'urasticname', 'inn_kpp', 
                 'directorname', 'urasticadress', 'account', 'bankname', 
-                'bankbik', 'corraccount', 'dirparty' ]
+                'bankbik', 'corraccount', 'dirparty', 'entityid', 'entity_name' ]
+        
+    def get_entity_name(self, obj):
+        try:
+            return obj.entityid.name if obj.entityid else None
+        except Entities.DoesNotExist:
+            return None
+    
     
 class VendorsNameSerializer(serializers.ModelSerializer):
      class Meta:

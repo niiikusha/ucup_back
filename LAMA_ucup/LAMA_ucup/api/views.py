@@ -34,7 +34,7 @@ class ClassifierListView(generics.ListAPIView):
     serializer_class = ClassifierSerializer #обрабатывает queryset
     pagination_class = BasePagination
 
-class VendorsListView(generics.ListAPIView): #фильтрация по юр лицу
+class VendorsNameFilterView(generics.ListAPIView): #фильтрация по юр лицу
     permission_classes = [AllowAny] 
     serializer_class =  VendorsNameSerializer #обрабатывает queryset
     pagination_class = BasePagination
@@ -59,12 +59,25 @@ class VendDocListView(generics.ListAPIView):
     serializer_class = VendDocSerializer
     pagination_class = BasePagination
 
-class VendorsViewSet(viewsets.ModelViewSet):
+class VendorsListViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny] 
-    queryset = Vendors.objects.all()
+    queryset = Vendors.objects.all().order_by('vendorid')
     serializer_class = VendorsSerializer
     pagination_class = BasePagination
-
+    
+    def get_queryset(self):
+        entityid = self.request.query_params.get('entityid', None)
+        
+        # Проверяем, предоставлен ли entityid в параметрах запроса
+        if entityid:
+            # Фильтруем поставщиков на основе предоставленного entityid
+            queryset = Vendors.objects.filter(entityid=entityid)
+        else:
+            # Если entityid не предоставлен, возвращаем всех поставщиков
+            queryset = Vendors.objects.all()
+    
+        return queryset
+    
     def list(self, request, *args, **kwargs):
         # Проверяем наличие параметра fields в запросе
         fields_param = request.query_params.get('fields', None)
