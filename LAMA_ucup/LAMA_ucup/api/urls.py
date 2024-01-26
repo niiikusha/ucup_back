@@ -24,7 +24,7 @@ app_name = 'LAMA_ucup'
 urlpatterns = [
     path('entitieslist/', EntitiesListView.as_view()),
 
-    path('kulist', KuListView.as_view()),
+    path('kulist/', KuListView.as_view()),
     path('ku/<str:pk>/', KuAPIUpdate.as_view()),
     path('kudetail/<str:pk>/', KuDetailView.as_view()),
 

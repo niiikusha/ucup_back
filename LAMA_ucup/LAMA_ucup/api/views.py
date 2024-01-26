@@ -40,22 +40,19 @@ class VendorsNameFilterView(generics.ListAPIView): #фильтрация по ю
     pagination_class = BasePagination
 
     def get_queryset(self):
+        queryset = Vendors.objects.all()
         entity_id = self.request.query_params.get('entity_id', None)
         
         # Проверяем, предоставлен ли entityid в параметрах запроса
         if entity_id:
             # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = Vendors.objects.filter(entityid=entity_id)
-        else:
-            # Если entityid не предоставлен, возвращаем всех поставщиков
-            queryset = Vendors.objects.all()
+            queryset = queryset.filter(entity_id=entity_id)
     
         return queryset
 
 
 class VendDocListView(generics.ListAPIView):
     permission_classes = [AllowAny]
-    
     serializer_class = VendDocSerializer
     pagination_class = BasePagination
 
@@ -75,20 +72,17 @@ class VendDocListView(generics.ListAPIView):
 
 class VendorsListViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny] 
-    queryset = Vendors.objects.all().order_by('vendor_id')
     serializer_class = VendorsSerializer
     pagination_class = BasePagination
     
     def get_queryset(self):
+        queryset = Vendors.objects.all().order_by('vendor_id')
         entity_id = self.request.query_params.get('entity_id', None)
         
         # Проверяем, предоставлен ли entityid в параметрах запроса
         if entity_id:
             # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = Vendors.objects.filter(entity_id=entity_id).order_by('vendor_id')
-        else:
-            # Если entityid не предоставлен, возвращаем всех поставщиков
-            queryset = Vendors.objects.all().order_by('vendor_id')
+            queryset = queryset.filter(entity_id=entity_id)
     
         return queryset
     
@@ -123,7 +117,37 @@ class KuListView(generics.ListCreateAPIView):
         # Вызвать метод calculate_base для установки значения base
         instance.calculate_base()
 
-    # def get_queryset(self):
+    def get_queryset(self):
+        queryset = Ku.objects.all()
+        entity_id = self.request.query_params.get('entity_id', None)
+        vendor_id = self.request.query_params.get('vendor_id', None)
+        period =self.request.query_params.get('period', None)
+        status =self.request.query_params.get('status', None)
+        date_start =self.request.query_params.get('date_start', None)
+        date_end =self.request.query_params.get('date_end', None)
+
+        if entity_id is not None:
+            # Фильтруем поставщиков на основе предоставленного entityid
+            queryset = queryset.filter(entity_id=entity_id)
+
+        if vendor_id is not None:
+            queryset = queryset.filter(vendor_id=vendor_id)
+
+        if period is not None:
+            queryset = queryset.filter(period=period)
+
+        if status is not None:
+            queryset = queryset.filter(status=status)
+
+        if date_start is not None:
+            queryset = queryset.filter(date_start=date_start)
+
+        if date_end is not None:
+            queryset = queryset.filter(date_end=date_end)
+
+        return queryset
+    
+    # def get_queryset(self):   
     #     # Получаем выбранную сущность из данных запроса
     #     selected_entity_id = self.request.data.get('entity_id')
 

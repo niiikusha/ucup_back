@@ -133,11 +133,15 @@ class Ku(models.Model):
         db_table = 'KU'
 
     def calculate_base(self): #расчет базы по всем товарам всех накладных
-        # Найти строки в Venddoc, соответствующие условиям
-        venddoc_rows = Venddoc.objects.filter(
+        if self.date_actual:
+            date_end = self.date_actual
+        else:
+            date_end = self.date_end
+        
+        venddoc_rows = Venddoc.objects.filter( # Найти строки в Venddoc, соответствующие условиям
             vendor_id=self.vendor_id,
             entity_id=self.entity_id,
-            invoice_date__range=[self.date_start, self.date_end]
+            invoice_date__range=[self.date_start, date_end]
         )
         total_base = 0
         # Итерировать по всем найденным строкам в Venddoc

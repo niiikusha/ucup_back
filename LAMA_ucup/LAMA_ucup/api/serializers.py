@@ -74,7 +74,7 @@ class VendorsSerializer(serializers.ModelSerializer):
 class VendorsNameSerializer(serializers.ModelSerializer):
      class Meta:
         model = Vendors
-        fields = ['entityid','vendor_id', 'name']
+        fields = ['entity_id','vendor_id', 'name']
 
 class VendDocSerializer(serializers.ModelSerializer):
     entity_name = serializers.SerializerMethodField()
