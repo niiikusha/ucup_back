@@ -109,6 +109,7 @@ class KuListView(generics.ListCreateAPIView):
     permission_classes = [AllowAny] 
     queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
+    pagination_class = BasePagination
 
     def perform_create(self, serializer):
         # Вызвать метод save у сериализатора для создания экземпляра Ku
@@ -172,6 +173,7 @@ class GraphListView(generics.ListCreateAPIView):
     permission_classes = [AllowAny]
     queryset = KuGraph.objects.all()
     serializer_class = KuGraphSerializer
+    pagination_class = BasePagination
 
 class GraphDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление/обновлени/удаление в одном
     permission_classes = [AllowAny]
