@@ -179,7 +179,7 @@ class KuGraph(models.Model):
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end')  # Field name made lowercase.
     date_calc = models.DateField(db_column='Date_calc')  # Field name made lowercase.
-    status = models.CharField(db_column='Status', max_length=2)  # Field name made lowercase.
+    status = models.CharField(db_column='Status', max_length=20)  # Field name made lowercase.
     sum_calc = models.FloatField(db_column='Sum_calc', blank=True, null=True)  # Field name made lowercase.
     sum_bonus = models.FloatField(db_column='Sum_bonus', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.

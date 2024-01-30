@@ -172,7 +172,7 @@ class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
 class GraphListView(generics.ListCreateAPIView): 
     permission_classes = [AllowAny]
     serializer_class = KuGraphSerializer
-    pagination_class = BasePagination
+    #pagination_class = BasePagination
 
     def get_queryset(self):
         queryset = KuGraph.objects.all()
@@ -203,7 +203,7 @@ class GraphListView(generics.ListCreateAPIView):
 
         return queryset
 
-class GraphDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление/обновлени/удаление в одном
+class GraphDetailView(generics.CreateAPIView): #добавление
     permission_classes = [AllowAny]
     queryset = KuGraph.objects.all()
     serializer_class = KuGraphSerializer
@@ -213,6 +213,30 @@ class ProductsListView(generics.ListAPIView):
     queryset = Products.objects.all() #данные которые будут возвращаться
     serializer_class = ProductsSerializer #обрабатывает queryset
     pagination_class = BasePagination
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_graph(request):
+    graph_data = JSONParser().parse(request)
+    serializer_class = KuGraphSerializer(data=graph_data)
+    if serializer_class.is_valid():
+        serializer_class.save()
+        return JsonResponse(serializer_class.data, status=status.HTTP_201_CREATED)
+    return JsonResponse(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['POST']) #добавление графика платежей
+# @permission_classes([AllowAny])
+# def create_graph(request):
+#     ku_data = request.data.get('ku_instance', {})
+#     graph_data = request.data
+
+#     ku_graph_serializer = KuGraphSerializer(data=graph_data)
+#     if ku_graph_serializer.is_valid():
+#         ku_graph = ku_graph_serializer.save()
+#         return Response({'graph_id': ku_graph.graph_id}, status=status.HTTP_201_CREATED)
+#     else:
+#         return Response(ku_graph_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def products_filter(request): 
