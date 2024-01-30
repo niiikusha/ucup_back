@@ -171,9 +171,37 @@ class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
 
 class GraphListView(generics.ListCreateAPIView): 
     permission_classes = [AllowAny]
-    queryset = KuGraph.objects.all()
     serializer_class = KuGraphSerializer
     pagination_class = BasePagination
+
+    def get_queryset(self):
+        queryset = KuGraph.objects.all()
+        vendor_id = self.request.query_params.get('vendor_id', None)
+        ku = self.request.query_params.get('ku', None)
+        period =self.request.query_params.get('period', None)
+        status =self.request.query_params.get('status', None)
+        date_start =self.request.query_params.get('date_start', None)
+        date_end =self.request.query_params.get('date_end', None)
+
+        if vendor_id is not None:
+            queryset = queryset.filter(vendor_id=vendor_id)
+
+        if ku is not None:
+            queryset = queryset.filter(ku=ku)
+
+        if period is not None:
+            queryset = queryset.filter(period=period)
+
+        if status is not None:
+            queryset = queryset.filter(status=status)
+
+        if date_start is not None:
+            queryset = queryset.filter(date_start=date_start)
+
+        if date_end is not None:
+            queryset = queryset.filter(date_end=date_end)
+
+        return queryset
 
 class GraphDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление/обновлени/удаление в одном
     permission_classes = [AllowAny]
