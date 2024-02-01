@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
+from django.db.models import Q
 from ..models import Entities, Ku
     
 class BasePagination(PageNumberPagination):
@@ -77,13 +78,22 @@ class VendorsListViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         queryset = Vendors.objects.all().order_by('vendor_id')
-        entity_id = self.request.query_params.get('entity_id', None)
+        #entity_id = self.request.query_params.get('entity_id', None)
+        entity_ids = self.request.query_params.getlist('entity_id', [])
+        search_query = self.request.query_params.get('search', '')
         
         # Проверяем, предоставлен ли entityid в параметрах запроса
-        if entity_id:
-            # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = queryset.filter(entity_id=entity_id)
-    
+        if entity_ids:
+            # Фильтруем поставщиков на основе предоставленных entity_ids
+            queryset = queryset.filter(entity_id__in=entity_ids)
+
+        if search_query:
+            queryset = queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(urasticname__icontains=search_query) |
+            Q(directorname__icontains=search_query)
+            )
+
         return queryset
     
     def list(self, request, *args, **kwargs):

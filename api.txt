@@ -52,6 +52,8 @@ Get запрос на url /api/vendorlist/
             "entityid": "lir",
             "entity_name": "ООО Инвест-Ресторация"
         },
+Запрос на получение поставщиков с фильтром по нескольким юр лицам: http://192.168.6.168:8001/api/vendorlist/?entityid=lir&entity_id=arr
+Запрос на получение поставщиков с поиском: http://192.168.6.168:8001/api/vendorlist/?serch=Корабельникова
 4) Метод создания графика платежей 
  path('create_graph/', create_graph, name='create-graph'),
  передаем объект: 
