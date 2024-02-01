@@ -21,8 +21,21 @@ class BasePagination(PageNumberPagination):
 
 class EntitiesListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
-    queryset = Entities.objects.all() #данные которые будут возвращаться
     serializer_class = EntitiesSerializer #обрабатывает queryset
+    
+    def get_queryset(self):
+        queryset = Entities.objects.all()
+        search_query = self.request.query_params.get('search', '') 
+        if search_query: 
+            queryset = queryset.filter( 
+                Q(entity_id__icontains=search_query) | 
+                Q(name__icontains=search_query) |
+                Q(urasticname__icontains=search_query) | 
+                Q(directorname__icontains=search_query) | 
+                Q(urasticaddress__icontains=search_query) 
+            )
+        return queryset
+    
 
 class BrandClassifierListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
@@ -69,7 +82,21 @@ class VendDocListView(generics.ListAPIView):
             queryset = queryset.filter(entity_id=entity_id).order_by('vendor_id')
         if vendor_id is not None:
             queryset = queryset.filter(vendor_id=vendor_id).order_by('vendor_id')
-        
+    
+        search_query = self.request.query_params.get('search', '') 
+
+        if search_query: 
+            queryset = queryset.filter( 
+                Q(invoice_id__icontains=search_query) | 
+                Q(invoice_number__icontains=search_query) | 
+                Q(invoice_name__icontains=search_query) |
+                Q(entity_id__exact=search_query) | 
+                Q(entity_idnameicontains=search_query) | 
+                Q(vendor_id__exact=search_query) |
+                Q(vendor_idnameicontains=search_query) |
+                Q(invoice_date__icontains=search_query) 
+                )
+
         return queryset
 
 class VendorsListViewSet(viewsets.ModelViewSet):
@@ -95,7 +122,23 @@ class VendorsListViewSet(viewsets.ModelViewSet):
             Q(directorname__icontains=search_query)
             )
 
+        search_query = self.request.query_params.get('search', '') 
+        try:
+            queryset = queryset.filter( 
+                Q(vendor_id__icontains=search_query) | 
+                Q(name__icontains=search_query) | 
+                Q(urasticname__icontains=search_query) | 
+                Q(directorname__icontains=search_query) |
+                Q(inn_kpp__icontains=search_query) |
+                Q(urasticadress__icontains=search_query) |
+                Q(entity_id__exact=search_query) | # если нужно только айди фильтровать, exact, т.к. он ключ
+                Q(entity_idnameicontains=search_query)  # и по id, и по name
+            )
+        except Exception as e:
+            print(f"Error in queryset filtering: {e}")
+        
         return queryset
+        
     
     def list(self, request, *args, **kwargs):
         # Проверяем наличие параметра fields в запросе
