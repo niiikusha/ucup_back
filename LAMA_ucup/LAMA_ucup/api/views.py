@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from django.db.models import Q
+import calendar
 from ..models import Entities, Ku
     
 class BasePagination(PageNumberPagination):
@@ -224,16 +225,107 @@ class ProductsListView(generics.ListAPIView):
     serializer_class = ProductsSerializer #обрабатывает queryset
     pagination_class = BasePagination
 
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def create_graph(request):
+#     graph_data = JSONParser().parse(request)
+#     serializer_class = KuGraphSerializer(data=graph_data)
+#     if serializer_class.is_valid():
+#         serializer_class.save()
+#         return JsonResponse(serializer_class.data, status=status.HTTP_201_CREATED)
+#     return JsonResponse(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_graph(request):
-    graph_data = JSONParser().parse(request)
-    serializer_class = KuGraphSerializer(data=graph_data)
-    if serializer_class.is_valid():
-        serializer_class.save()
-        return JsonResponse(serializer_class.data, status=status.HTTP_201_CREATED)
-    return JsonResponse(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+    input_data = JSONParser().parse(request)
 
+    # Получите данные от пользователя
+    ku_id = input_data.get('ku_id')
+    period = input_data.get('period')
+    date_start = input_data.get('date_start')
+    date_end_initial = input_data.get('date_end')
+    percent = input_data.get('percent')
+    vendor_id = input_data.get('vendor_id')
+
+    # Разбейте date_start на год, месяц и день
+    year, month, day = map(int, date_start.split('-'))
+
+    # Подготовьте данные для создания графиков
+    graph_data_list = []
+   
+    if period == 'Месяц':
+        # Получите последний день месяца
+        sum_bonus = 0
+        sum_calc = 0
+        status_value = "Запланированно"
+        date_end = f"{year}-{month:02d}-{day:02d}"
+        
+        while date_end < date_end_initial:
+            
+            # Формируйте date_end как последний день месяца
+            last_day = calendar.monthrange(year, month)[1] #количество дней месяца
+            date_end = f"{year}-{month:02d}-{last_day:02d}"
+
+            if date_end > date_end_initial: #проверка последнего графика 
+                date_end = date_end_initial
+
+            next_month = month % 12 + 1
+            next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
+            
+            graph_data_list.append({
+                'date_start': f"{year}-{month:02d}-{day:02d}",
+                'date_end': date_end,
+                'date_calc': f"{next_month_year}-{next_month:02d}-01",
+                'status': status_value,
+                'sum_calc': sum_calc,
+                'sum_bonus': sum_bonus,
+                'percent': percent,
+                'vendor_id': vendor_id,
+                'ku_id': ku_id,
+                'period': period
+            })
+
+            # Переходите к следующему месяцу
+            month = next_month
+            year = next_month_year
+            day = 1  # Начинайте с первого дня следующего месяца
+
+
+    elif period == 'Год':
+        while year <= datetime.now().year:
+            # Получите последний день текущего года
+            last_day = calendar.monthrange(year, 12)[1]
+
+            # Формируйте date_end как последний день года
+            date_end = f"{year}-12-{last_day:02d}"
+
+            graph_data_list.append({
+                'date_start': f"{year}-{month:02d}-{day:02d}",
+                'date_end': date_end,
+                # Добавьте другие данные графика
+            })
+
+            # Переходите к следующему году
+            year += 1
+            month = 1  # Начинайте с января следующего года
+            day = 1  # Начинайте с первого дня января следующего года
+
+    # Создайте экземпляры сериализаторов и сохраните их
+    serializer_instances = []
+    for graph_data in graph_data_list:
+        serializer_instance = KuGraphSerializer(data=graph_data)
+        if serializer_instance.is_valid():
+            serializer_instance.save()
+            serializer_instances.append(serializer_instance)
+        else:
+            return JsonResponse({'error': serializer_instance.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Верните успешный ответ с данными созданных объектов
+    data = [serializer_instance.data for serializer_instance in serializer_instances]
+    return JsonResponse(data, status=status.HTTP_201_CREATED, safe=False)
 # @api_view(['POST']) #добавление графика платежей
 # @permission_classes([AllowAny])
 # def create_graph(request):
