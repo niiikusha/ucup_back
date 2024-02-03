@@ -212,10 +212,26 @@ class Venddoc(models.Model):
     purch_date = models.DateField(db_column='Purch_date')  # Field name made lowercase.
     invoicestatus = models.CharField(db_column='InvoiceStatus', blank=True, null=True)  # Field name made lowercase.
     invoice_id = models.BigAutoField(db_column='Invoice_id', primary_key=True)  # Field name made lowercase.
+    products_amount = models.FloatField(db_column='Products_amount', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         managed = False
         db_table = 'VendDoc'
+
+    def products_amount_sum_in_range(self, start_date, end_date, vendor_id, entity_id):
+        """
+        Рассчитать сумму products_amount в указанном диапазоне дат и для указанных vendor_id и entity_id.
+        """
+        return (
+            Venddoc.objects
+            .filter(
+                vendor_id=vendor_id,
+                entity_id=entity_id,
+                invoice_date__gte=start_date,
+                invoice_date__lte=end_date
+            )
+            .aggregate(sum_products_amount=models.Sum('products_amount'))['sum_products_amount'] or 0
+        )
 
 
 class Venddoclines(models.Model):

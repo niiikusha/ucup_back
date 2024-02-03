@@ -292,6 +292,7 @@ def create_graph(request):
     date_end_initial = input_data.get('date_end')
     percent = input_data.get('percent')
     vendor_id = input_data.get('vendor_id')
+    entity_id = input_data.get('entity_id')
 
     # Разбейте date_start на год, месяц и день
     year, month, day = map(int, date_start.split('-'))
@@ -336,25 +337,33 @@ def create_graph(request):
             year = next_month_year
             day = 1  # Начинайте с первого дня следующего месяца
 
+    for date_range in graph_data_list:
+        start_date = date_range['date_start']
+        end_date = date_range['date_end']
+        # Рассчитать sum_calc, используя метод products_amount_sum_in_range
+        sum_calc = Venddoc().products_amount_sum_in_range(start_date, end_date, vendor_id, entity_id)
+        sum_bonus = sum_calc * percent / 100
+        date_range['sum_calc'] = sum_calc
+        date_range['sum_bonus'] = sum_bonus
 
-    elif period == 'Год':
-        while year <= datetime.now().year:
-            # Получите последний день текущего года
-            last_day = calendar.monthrange(year, 12)[1]
+    # elif period == 'Год':
+    #     while year <= datetime.now().year:
+    #         # Получите последний день текущего года
+    #         last_day = calendar.monthrange(year, 12)[1]
 
-            # Формируйте date_end как последний день года
-            date_end = f"{year}-12-{last_day:02d}"
+    #         # Формируйте date_end как последний день года
+    #         date_end = f"{year}-12-{last_day:02d}"
 
-            graph_data_list.append({
-                'date_start': f"{year}-{month:02d}-{day:02d}",
-                'date_end': date_end,
-                # Добавьте другие данные графика
-            })
+    #         graph_data_list.append({
+    #             'date_start': f"{year}-{month:02d}-{day:02d}",
+    #             'date_end': date_end,
+    #             # Добавьте другие данные графика
+    #         })
 
-            # Переходите к следующему году
-            year += 1
-            month = 1  # Начинайте с января следующего года
-            day = 1  # Начинайте с первого дня января следующего года
+    #         # Переходите к следующему году
+    #         year += 1
+    #         month = 1  # Начинайте с января следующего года
+    #         day = 1  # Начинайте с первого дня января следующего года
 
     # Создайте экземпляры сериализаторов и сохраните их
     serializer_instances = []
