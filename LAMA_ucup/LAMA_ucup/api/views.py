@@ -229,10 +229,12 @@ class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView):
     serializer_class = KuGraphSerializer
     #pagination_class = BasePagination
     
-    
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
+        queryset = self.get_queryset()
+
+        # Проходим по queryset и удаляем каждый объект
+        for instance in queryset:
+            self.perform_destroy(instance)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     
@@ -308,16 +310,12 @@ def create_graph(request):
     # Подготовьте данные для создания графиков
     graph_data_list = []
    
-    if period == 'Месяц'== 'Год':
+    if period == 'Месяц':
         # Получите последний день месяца
         sum_bonus = 0
         sum_calc = 0
         status_value = "Запланированно"
         date_end = f"{year}-{month:02d}-{day:02d}"
-        if period == 'Год':
-            last_month = 12
-        if period == 'Месяц':
-            last_month = 1
         
         while date_end < date_end_initial:
             
