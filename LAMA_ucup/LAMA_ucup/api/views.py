@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from django.db.models import Q
 import calendar
+import numpy as np
 from ..models import Entities, Ku
     
 class BasePagination(PageNumberPagination):
@@ -170,7 +171,7 @@ class KuListView(generics.ListCreateAPIView):
         instance = serializer.save()
 
         # Вызвать метод calculate_base для установки значения base
-        instance.calculate_base()
+        #instance.calculate_base()
 
     def get_queryset(self):
         queryset = Ku.objects.all()
@@ -257,7 +258,7 @@ class GraphListView(generics.ListCreateAPIView):
 
         return queryset
 
-class GraphDetailView(generics.CreateAPIView): #добавление
+class GraphDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
     permission_classes = [AllowAny]
     queryset = KuGraph.objects.all()
     serializer_class = KuGraphSerializer
@@ -300,7 +301,7 @@ def create_graph(request):
     # Подготовьте данные для создания графиков
     graph_data_list = []
    
-    if period == 'Месяц':
+    if period == 'Месяц'== 'Год':
         # Получите последний день месяца
         sum_bonus = 0
         sum_calc = 0
@@ -309,6 +310,7 @@ def create_graph(request):
         
         while date_end < date_end_initial:
             
+            # last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #квартал
             # Формируйте date_end как последний день месяца
             last_day = calendar.monthrange(year, month)[1] #количество дней месяца
             date_end = f"{year}-{month:02d}-{last_day:02d}"
@@ -318,6 +320,10 @@ def create_graph(request):
 
             next_month = month % 12 + 1
             next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
+
+            # next_quarter = ((last_month_of_quarter - 1) // 3 + 1) % 4 + 1 #квартал
+            # next_quarter_year = year + (1 if next_quarter == 1 else 0)
+            
             
             graph_data_list.append({
                 'date_start': f"{year}-{month:02d}-{day:02d}",
@@ -336,6 +342,7 @@ def create_graph(request):
             month = next_month
             year = next_month_year
             day = 1  # Начинайте с первого дня следующего месяца
+
 
     for date_range in graph_data_list:
         start_date = date_range['date_start']

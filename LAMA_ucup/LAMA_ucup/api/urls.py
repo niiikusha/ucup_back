@@ -28,7 +28,7 @@ urlpatterns = [
     path('ku/<str:pk>/', KuAPIUpdate.as_view()),
     path('kudetail/<str:pk>/', KuDetailView.as_view()),
 
-    path('graphlist', GraphListView.as_view()), 
+    path('graphlist/', GraphListView.as_view()), 
     path('graphdetail/<int:pk>/', GraphDetailView.as_view()),
     path('create_graph/', create_graph, name='create-graph'),
 
