@@ -83,7 +83,7 @@ class VendDocSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venddoc
         fields = ['invoice_id','vendor_id', 'vendor_name', 'entity_id', 'entity_name','docid', 'doctype', 'invoice_name', 'invoice_number',
-                  'invoice_date', 'purch_number', 'purch_date', 'invoicestatus']
+                  'invoice_date', 'purch_number', 'purch_date', 'invoicestatus', 'products_amount']
         
         
     def get_entity_name(self, obj):

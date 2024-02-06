@@ -91,9 +91,9 @@ class VendDocListView(generics.ListAPIView):
                 Q(invoice_number__icontains=search_query) | 
                 Q(invoice_name__icontains=search_query) |
                 Q(entity_id__exact=search_query) | 
-                Q(entity_idnameicontains=search_query) | 
+                Q(entity_id__name__icontains=search_query) | 
                 Q(vendor_id__exact=search_query) |
-                Q(vendor_idnameicontains=search_query) |
+                Q(vendor_id__name__icontains=search_query) |
                 Q(invoice_date__icontains=search_query) 
                 )
 
@@ -132,7 +132,7 @@ class VendorsListViewSet(viewsets.ModelViewSet):
                 Q(inn_kpp__icontains=search_query) |
                 Q(urasticadress__icontains=search_query) |
                 Q(entity_id__exact=search_query) | # если нужно только айди фильтровать, exact, т.к. он ключ
-                Q(entity_idnameicontains=search_query)  # и по id, и по name
+                Q(entity_id__name__icontains=search_query)  # и по id, и по name
             )
         except Exception as e:
             print(f"Error in queryset filtering: {e}")
