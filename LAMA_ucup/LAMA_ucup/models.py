@@ -126,6 +126,7 @@ class Ku(models.Model):
     date_actual = models.DateField(db_column='Date_actual', blank=True, null=True)  # Field name made lowercase.
     base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
+    graph_exists = models.BooleanField(db_column='graph_Exists', blank=True, null=True)  # Field name made lowercase.
     _count = 0  # Статическая переменная
 
     class Meta:

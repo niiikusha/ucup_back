@@ -224,11 +224,18 @@ class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
     queryset = Ku.objects.all()
     serializer_class = KuSerializer
 
-class GraphListView(generics.ListCreateAPIView): 
+class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView): 
     permission_classes = [AllowAny]
     serializer_class = KuGraphSerializer
     #pagination_class = BasePagination
+    
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
 
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
     def get_queryset(self):
         queryset = KuGraph.objects.all()
         vendor_id = self.request.query_params.get('vendor_id', None)
@@ -307,12 +314,17 @@ def create_graph(request):
         sum_calc = 0
         status_value = "Запланированно"
         date_end = f"{year}-{month:02d}-{day:02d}"
+        if period == 'Год':
+            last_month = 12
+        if period == 'Месяц':
+            last_month = 1
         
         while date_end < date_end_initial:
             
             # last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #квартал
             # Формируйте date_end как последний день месяца
             last_day = calendar.monthrange(year, month)[1] #количество дней месяца
+            last_month = 12
             date_end = f"{year}-{month:02d}-{last_day:02d}"
 
             if date_end > date_end_initial: #проверка последнего графика 
