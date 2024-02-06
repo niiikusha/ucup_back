@@ -162,7 +162,7 @@ class VendorsListViewSet(viewsets.ModelViewSet):
 
 class KuListView(generics.ListCreateAPIView):
     permission_classes = [AllowAny] 
-    queryset = Ku.objects.all() #данные которые будут возвращаться
+    # queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
     pagination_class = BasePagination
 
@@ -174,7 +174,7 @@ class KuListView(generics.ListCreateAPIView):
         #instance.calculate_base()
 
     def get_queryset(self):
-        queryset = Ku.objects.all()
+        queryset = Ku.objects.all().order_by('ku_id')
         entity_id = self.request.query_params.get('entity_id', None)
         vendor_id = self.request.query_params.get('vendor_id', None)
         period =self.request.query_params.get('period', None)
@@ -203,15 +203,6 @@ class KuListView(generics.ListCreateAPIView):
 
         return queryset
     
-    # def get_queryset(self):   
-    #     # Получаем выбранную сущность из данных запроса
-    #     selected_entity_id = self.request.data.get('entity_id')
-
-    #     # Фильтруем вендоров на основе выбранной сущности
-    #     if selected_entity_id:
-    #         return Ku.objects.filter(entity__id=selected_entity_id)
-    #     else:
-    #         return Ku.objects.all()
 
 class KuAPIUpdate(generics.RetrieveUpdateAPIView):
     permission_classes = [AllowAny] # (IsAuthenticated,)  
@@ -239,9 +230,9 @@ class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     def get_queryset(self):
-        queryset = KuGraph.objects.all()
+        queryset = KuGraph.objects.all().order_by('graph_id')
         vendor_id = self.request.query_params.get('vendor_id', None)
-        ku = self.request.query_params.get('ku', None)
+        ku_id = self.request.query_params.get('ku_id', None)
         period =self.request.query_params.get('period', None)
         status =self.request.query_params.get('status', None)
         date_start =self.request.query_params.get('date_start', None)
@@ -250,8 +241,8 @@ class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView):
         if vendor_id is not None:
             queryset = queryset.filter(vendor_id=vendor_id)
 
-        if ku is not None:
-            queryset = queryset.filter(ku=ku)
+        if ku_id is not None:
+            queryset = queryset.filter(ku_id=ku_id)
 
         if period is not None:
             queryset = queryset.filter(period=period)
@@ -277,16 +268,6 @@ class ProductsListView(generics.ListAPIView):
     queryset = Products.objects.all() #данные которые будут возвращаться
     serializer_class = ProductsSerializer #обрабатывает queryset
     pagination_class = BasePagination
-
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def create_graph(request):
-#     graph_data = JSONParser().parse(request)
-#     serializer_class = KuGraphSerializer(data=graph_data)
-#     if serializer_class.is_valid():
-#         serializer_class.save()
-#         return JsonResponse(serializer_class.data, status=status.HTTP_201_CREATED)
-#     return JsonResponse(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -314,7 +295,7 @@ def create_graph(request):
         # Получите последний день месяца
         sum_bonus = 0
         sum_calc = 0
-        status_value = "Запланированно"
+        status_value = "Запланировано"
         date_end = f"{year}-{month:02d}-{day:02d}"
         
         while date_end < date_end_initial:
@@ -353,6 +334,48 @@ def create_graph(request):
             year = next_month_year
             day = 1  # Начинайте с первого дня следующего месяца
 
+    if period == 'Год':
+        # Получите последний день месяца
+        sum_bonus = 0
+        sum_calc = 0
+        status_value = "Запланировано"
+        date_end = f"{year}-{month:02d}-{day:02d}"
+        
+        while date_end < date_end_initial:
+            
+            # last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #квартал
+            # Формируйте date_end как последний день месяца
+            last_day = calendar.monthrange(year, month)[1] #количество дней месяца
+            last_month = 12
+            date_end = f"{year}-{month:02d}-{last_day:02d}"
+
+            if date_end > date_end_initial: #проверка последнего графика 
+                date_end = date_end_initial
+
+            next_month = month % 12 + 1
+            next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
+
+            # next_quarter = ((last_month_of_quarter - 1) // 3 + 1) % 4 + 1 #квартал
+            # next_quarter_year = year + (1 if next_quarter == 1 else 0)
+            
+            
+            graph_data_list.append({
+                'date_start': f"{year}-{month:02d}-{day:02d}",
+                'date_end': date_end,
+                'date_calc': f"{next_month_year}-{next_month:02d}-01",
+                'status': status_value,
+                'sum_calc': sum_calc,
+                'sum_bonus': sum_bonus,
+                'percent': percent,
+                'vendor_id': vendor_id,
+                'ku_id': ku_id,
+                'period': period
+            })
+
+            # Переходите к следующему месяцу
+            month = next_month
+            year = next_month_year
+            day = 1  # Начинайте с первого дня следующего месяца
 
     for date_range in graph_data_list:
         start_date = date_range['date_start']
@@ -395,18 +418,6 @@ def create_graph(request):
     # Верните успешный ответ с данными созданных объектов
     data = [serializer_instance.data for serializer_instance in serializer_instances]
     return JsonResponse(data, status=status.HTTP_201_CREATED, safe=False)
-# @api_view(['POST']) #добавление графика платежей
-# @permission_classes([AllowAny])
-# def create_graph(request):
-#     ku_data = request.data.get('ku_instance', {})
-#     graph_data = request.data
-
-#     ku_graph_serializer = KuGraphSerializer(data=graph_data)
-#     if ku_graph_serializer.is_valid():
-#         ku_graph = ku_graph_serializer.save()
-#         return Response({'graph_id': ku_graph.graph_id}, status=status.HTTP_201_CREATED)
-#     else:
-#         return Response(ku_graph_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
