@@ -174,7 +174,7 @@ class KuListView(generics.ListCreateAPIView):
         #instance.calculate_base()
 
     def get_queryset(self):
-        queryset = Ku.objects.all().order_by('ku_id')
+        queryset = Ku.objects.all()
         entity_id = self.request.query_params.get('entity_id', None)
         vendor_id = self.request.query_params.get('vendor_id', None)
         period =self.request.query_params.get('period', None)
@@ -201,7 +201,7 @@ class KuListView(generics.ListCreateAPIView):
         if date_end is not None:
             queryset = queryset.filter(date_end=date_end)
 
-        return queryset
+        return queryset.order_by('-ku_id')
     
 
 class KuAPIUpdate(generics.RetrieveUpdateAPIView):
@@ -218,7 +218,7 @@ class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
 class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView): 
     permission_classes = [AllowAny]
     serializer_class = KuGraphSerializer
-    #pagination_class = BasePagination
+    pagination_class = BasePagination
     
     def destroy(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -342,12 +342,9 @@ def create_graph(request):
         date_end = f"{year}-{month:02d}-{day:02d}"
         
         while date_end < date_end_initial:
-            
-            # last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #квартал
-            # Формируйте date_end как последний день месяца
             last_day = calendar.monthrange(year, month)[1] #количество дней месяца
             last_month = 12
-            date_end = f"{year}-{month:02d}-{last_day:02d}"
+            date_end = f"{year}-{12:02d}-{last_day:02d}"
 
             if date_end > date_end_initial: #проверка последнего графика 
                 date_end = date_end_initial
