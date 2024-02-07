@@ -290,20 +290,20 @@ def create_graph(request):
 
     # Подготовьте данные для создания графиков
     graph_data_list = []
-   
+
+    sum_bonus = 0
+    sum_calc = 0
+
+    date_end = f"{year}-{month:02d}-{day:02d}"
+
     if period == 'Месяц':
-        # Получите последний день месяца
-        sum_bonus = 0
-        sum_calc = 0
-        status_value = "Запланировано"
-        date_end = f"{year}-{month:02d}-{day:02d}"
         
         while date_end < date_end_initial:
             
             # last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #квартал
             # Формируйте date_end как последний день месяца
             last_day = calendar.monthrange(year, month)[1] #количество дней месяца
-            last_month = 12
+
             date_end = f"{year}-{month:02d}-{last_day:02d}"
 
             if date_end > date_end_initial: #проверка последнего графика 
@@ -320,13 +320,6 @@ def create_graph(request):
                 'date_start': f"{year}-{month:02d}-{day:02d}",
                 'date_end': date_end,
                 'date_calc': f"{next_month_year}-{next_month:02d}-01",
-                'status': status_value,
-                'sum_calc': sum_calc,
-                'sum_bonus': sum_bonus,
-                'percent': percent,
-                'vendor_id': vendor_id,
-                'ku_id': ku_id,
-                'period': period
             })
 
             # Переходите к следующему месяцу
@@ -335,43 +328,31 @@ def create_graph(request):
             day = 1  # Начинайте с первого дня следующего месяца
 
     if period == 'Год':
-        # Получите последний день месяца
-        sum_bonus = 0
-        sum_calc = 0
-        status_value = "Запланировано"
-        date_end = f"{year}-{month:02d}-{day:02d}"
         
         while date_end < date_end_initial:
-            last_day = calendar.monthrange(year, month)[1] #количество дней месяца
-            last_month = 12
-            date_end = f"{year}-{12:02d}-{last_day:02d}"
+            
+            date_end = f"{year}-{12:02d}-{31:02d}"
+            month_start = month
+            month_calc = 1
+            year_calc = year + 1
 
             if date_end > date_end_initial: #проверка последнего графика 
                 date_end = date_end_initial
 
-            next_month = month % 12 + 1
-            next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
-
-            # next_quarter = ((last_month_of_quarter - 1) // 3 + 1) % 4 + 1 #квартал
-            # next_quarter_year = year + (1 if next_quarter == 1 else 0)
-            
+                month_in_date_end = int(date_end_initial.split("-")[1])
+                month_calc = month_in_date_end % 12 + 1
+                year_calc = year + (1 if month_calc == 1 else 0) #проверка на переполнение месяцев
             
             graph_data_list.append({
-                'date_start': f"{year}-{month:02d}-{day:02d}",
+                'date_start': f"{year}-{month_start:02d}-{day:02d}",
                 'date_end': date_end,
-                'date_calc': f"{next_month_year}-{next_month:02d}-01",
-                'status': status_value,
-                'sum_calc': sum_calc,
-                'sum_bonus': sum_bonus,
-                'percent': percent,
-                'vendor_id': vendor_id,
-                'ku_id': ku_id,
-                'period': period
+                'date_calc': f"{year_calc}-{month_calc:02d}-01",
             })
 
             # Переходите к следующему месяцу
-            month = next_month
-            year = next_month_year
+            month = 1
+            month_start = 1
+            year += 1
             day = 1  # Начинайте с первого дня следующего месяца
 
     for date_range in graph_data_list:
@@ -380,28 +361,21 @@ def create_graph(request):
         # Рассчитать sum_calc, используя метод products_amount_sum_in_range
         sum_calc = Venddoc().products_amount_sum_in_range(start_date, end_date, vendor_id, entity_id)
         sum_bonus = sum_calc * percent / 100
+        
+        if sum_calc:
+            date_range['status'] = 'Рассчитано'
+        else:
+            date_range['status'] = 'Запланировано'
+
         date_range['sum_calc'] = sum_calc
         date_range['sum_bonus'] = sum_bonus
 
-    # elif period == 'Год':
-    #     while year <= datetime.now().year:
-    #         # Получите последний день текущего года
-    #         last_day = calendar.monthrange(year, 12)[1]
-
-    #         # Формируйте date_end как последний день года
-    #         date_end = f"{year}-12-{last_day:02d}"
-
-    #         graph_data_list.append({
-    #             'date_start': f"{year}-{month:02d}-{day:02d}",
-    #             'date_end': date_end,
-    #             # Добавьте другие данные графика
-    #         })
-
-    #         # Переходите к следующему году
-    #         year += 1
-    #         month = 1  # Начинайте с января следующего года
-    #         day = 1  # Начинайте с первого дня января следующего года
-
+        date_range['percent'] = input_data.get('percent')
+        date_range['ku_id'] = input_data.get('ku_id')
+        date_range['vendor_id'] = input_data.get('vendor_id')
+        date_range['period'] = input_data.get('period')
+        date_range['entity_id'] = input_data.get('entity_id')
+       
     # Создайте экземпляры сериализаторов и сохраните их
     serializer_instances = []
     for graph_data in graph_data_list:
