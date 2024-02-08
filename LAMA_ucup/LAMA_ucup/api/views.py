@@ -164,7 +164,7 @@ class KuListView(generics.ListCreateAPIView):
     permission_classes = [AllowAny] 
     # queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
-    pagination_class = BasePagination
+    
 
     def perform_create(self, serializer):
         # Вызвать метод save у сериализатора для создания экземпляра Ku
@@ -269,6 +269,20 @@ class ProductsListView(generics.ListAPIView):
     serializer_class = ProductsSerializer #обрабатывает queryset
     pagination_class = BasePagination
 
+    def get_queryset(self):
+        queryset = Products.objects.all().order_by('itemid')
+        
+        search_query = self.request.query_params.get('search', '') 
+        try:
+            queryset = queryset.filter( 
+                Q(itemid__icontains=search_query) | 
+                Q(name__icontains=search_query) 
+            )
+        except Exception as e:
+            print(f"Error in queryset filtering: {e}")
+        
+        return queryset
+
 
 
 @api_view(['POST'])
@@ -284,7 +298,6 @@ def create_graph(request):
     percent = input_data.get('percent')
     vendor_id = input_data.get('vendor_id')
     entity_id = input_data.get('entity_id')
-
     # Разбейте date_start на год, месяц и день
     year, month, day = map(int, date_start.split('-'))
 
@@ -293,7 +306,7 @@ def create_graph(request):
 
     sum_bonus = 0
     sum_calc = 0
-
+    date_calc = 15
     date_end = f"{year}-{month:02d}-{day:02d}"
 
     if period == 'Месяц':
@@ -319,7 +332,7 @@ def create_graph(request):
             graph_data_list.append({
                 'date_start': f"{year}-{month:02d}-{day:02d}",
                 'date_end': date_end,
-                'date_calc': f"{next_month_year}-{next_month:02d}-01",
+                'date_calc': f"{next_month_year}-{next_month:02d}-{date_calc}",
             })
 
             # Переходите к следующему месяцу
@@ -346,7 +359,7 @@ def create_graph(request):
             graph_data_list.append({
                 'date_start': f"{year}-{month_start:02d}-{day:02d}",
                 'date_end': date_end,
-                'date_calc': f"{year_calc}-{month_calc:02d}-01",
+                'date_calc': f"{year_calc}-{month_calc:02d}-{date_calc}",
             })
 
             # Переходите к следующему месяцу
@@ -354,6 +367,44 @@ def create_graph(request):
             month_start = 1
             year += 1
             day = 1  # Начинайте с первого дня следующего месяца
+
+    if period == 'Полгода':
+
+        last_day = calendar.monthrange(year, month)[1] #количество дней месяца
+        date_end = f"{year}-{month:02d}-{last_day:02d}"
+        date_start = f"{year}-{month:02d}-{day:02d}"
+        while date_end < date_end_initial:
+            
+            # last_day = calendar.monthrange(year, month)[1] #количество дней месяца
+            # half_year = 6 # кол-во меясцев в полугодии
+            # date_end = f"{year}-{month:02d}-{last_day:02d}"
+        
+            if month <= 6:
+                date_end = f"{year}-{6:02d}-{30:02d}" # до конца июня
+            else:
+                date_end = f"{year}-{12:02d}-{31:02d}"   #до конца декабря     #ян1 фр2 март3 апр4 май5 июнь6 / июль август сентярб отябрь ноябрь декабрь
+
+            if date_end > date_end_initial: #проверка последнего графика 
+                date_end = date_end_initial
+
+            # next_month = month % 12 + 1
+            # next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
+            
+            graph_data_list.append({
+                'date_start': date_start,
+                'date_end': date_end,
+                'date_calc': f"{next_month_year}-{next_month:02d}-01",
+            })
+
+            # Переходите к следующему месяцу
+            if month <= 6:
+                date_start = f"{year}-{1:02d}-{1:02d}" #с начала января
+            else:
+                date_start = f"{year}-{7:02d}-{1:02d}" #с начала июля
+
+            # month = next_month
+            year += 1
+            # day = 1  # Начинайте с первого дня следующего месяца
 
     for date_range in graph_data_list:
         start_date = date_range['date_start']
@@ -385,6 +436,11 @@ def create_graph(request):
             serializer_instances.append(serializer_instance)
         else:
             return JsonResponse({'error': serializer_instance.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    if graph_data_list:
+        ku_instance = Ku.objects.get(ku_id=ku_id)  #при создании графиков заполнение поля "существование графика" в ку
+        ku_instance.graph_exists = True
+        ku_instance.save()
 
     # Верните успешный ответ с данными созданных объектов
     data = [serializer_instance.data for serializer_instance in serializer_instances]
