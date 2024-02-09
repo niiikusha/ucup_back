@@ -16,7 +16,7 @@ import numpy as np
 from ..models import Entities, Ku
     
 class BasePagination(PageNumberPagination):
-    page_size = 50  # Количество записей на странице
+    page_size = 20  # Количество записей на странице
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -88,14 +88,8 @@ class VendDocListView(generics.ListAPIView):
 
         if search_query: 
             queryset = queryset.filter( 
-                Q(invoice_id__icontains=search_query) | 
-                Q(invoice_number__icontains=search_query) | 
-                Q(invoice_name__icontains=search_query) |
-                Q(entity_id__exact=search_query) | 
-                Q(entity_id__name__icontains=search_query) | 
                 Q(vendor_id__exact=search_query) |
-                Q(vendor_id__name__icontains=search_query) |
-                Q(invoice_date__icontains=search_query) 
+                Q(vendor_id__name__icontains=search_query)
                 )
 
         return queryset
@@ -109,19 +103,12 @@ class VendorsListViewSet(viewsets.ModelViewSet):
         queryset = Vendors.objects.all().order_by('vendor_id')
         #entity_id = self.request.query_params.get('entity_id', None)
         entity_ids = self.request.query_params.getlist('entity_id', [])
-        search_query = self.request.query_params.get('search', '')
         
         # Проверяем, предоставлен ли entityid в параметрах запроса
         if entity_ids:
             # Фильтруем поставщиков на основе предоставленных entity_ids
             queryset = queryset.filter(entity_id__in=entity_ids)
 
-        if search_query:
-            queryset = queryset.filter(
-            Q(name__icontains=search_query) |
-            Q(urasticname__icontains=search_query) |
-            Q(directorname__icontains=search_query)
-            )
 
         search_query = self.request.query_params.get('search', '') 
         try:
@@ -164,7 +151,7 @@ class KuListView(generics.ListCreateAPIView):
     permission_classes = [AllowAny] 
     # queryset = Ku.objects.all() #данные которые будут возвращаться
     serializer_class = KuSerializer #обрабатывает queryset
-    
+    pagination_class = BasePagination
 
     def perform_create(self, serializer):
         # Вызвать метод save у сериализатора для создания экземпляра Ku
@@ -174,17 +161,17 @@ class KuListView(generics.ListCreateAPIView):
         #instance.calculate_base()
 
     def get_queryset(self):
-        queryset = Ku.objects.all()
-        entity_id = self.request.query_params.get('entity_id', None)
+        queryset = Ku.objects.all().order_by('ku_id')
+        entity_ids = self.request.query_params.getlist('entity_id', [])
         vendor_id = self.request.query_params.get('vendor_id', None)
         period =self.request.query_params.get('period', None)
         status =self.request.query_params.get('status', None)
         date_start =self.request.query_params.get('date_start', None)
         date_end =self.request.query_params.get('date_end', None)
 
-        if entity_id is not None:
+        if entity_ids:
             # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = queryset.filter(entity_id=entity_id)
+            queryset = queryset.filter(entity_ids__in=entity_ids)
 
         if vendor_id is not None:
             queryset = queryset.filter(vendor_id=vendor_id)
@@ -201,6 +188,14 @@ class KuListView(generics.ListCreateAPIView):
         if date_end is not None:
             queryset = queryset.filter(date_end=date_end)
 
+        search_query = self.request.query_params.get('search', '') 
+        try:
+            queryset = queryset.filter( 
+                Q(vendor_id__exact=search_query) |
+                Q(vendor_id__name__icontains=search_query) 
+            )
+        except Exception as e:
+            print(f"Error in queryset filtering: {e}")
         return queryset.order_by('-ku_id')
     
 
@@ -255,6 +250,14 @@ class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView):
 
         if date_end is not None:
             queryset = queryset.filter(date_end=date_end)
+        
+        search_query = self.request.query_params.get('search', '') 
+
+        if search_query: 
+            queryset = queryset.filter( 
+                Q(vendor_id__exact=search_query) |
+                Q(vendor_id__name__icontains=search_query)
+                )
 
         return queryset
 
