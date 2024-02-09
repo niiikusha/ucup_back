@@ -6,16 +6,16 @@ python -m venv .venv
 деактивация
 deactivate
 установка зависимостей
-pip install -r requirements.txt
+pip install -r freeze.txt
 2)докер
 https://blog.ithillel.ua/ru/articles/sovety-po-startu-proekta-na-django-i-docker
 3) admin 1234
 4) python manage.py inspectdb > models.py создание моделей бд
 5) генерация requirements 
-pip freeze > requirements.txt
+pip freeze > freeze.txt
 6) настройка vscode 
 mkdir .vscode
-7)  python manage.py runserver 192.168.6.168:8001
+7)  python manage.py runserver 192.168.6.168:8000
 8) для лены:
     ссылка на фронте:
     # http://127.0.0.1:8001 на работе со своего
