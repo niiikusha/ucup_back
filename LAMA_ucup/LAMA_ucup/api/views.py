@@ -162,6 +162,7 @@ class KuListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Ku.objects.all().order_by('ku_id')
+        ku_ids = self.request.query_params.getlist('ku_id', [])
         entity_ids = self.request.query_params.getlist('entity_id', [])
         vendor_id = self.request.query_params.get('vendor_id', None)
         period =self.request.query_params.get('period', None)
@@ -169,8 +170,10 @@ class KuListView(generics.ListCreateAPIView):
         date_start =self.request.query_params.get('date_start', None)
         date_end =self.request.query_params.get('date_end', None)
 
+        if ku_ids:
+            queryset = queryset.filter(ku_id__in=ku_ids)
+
         if entity_ids:
-            # Фильтруем поставщиков на основе предоставленного entityid
             queryset = queryset.filter(entity_id__in=entity_ids)
 
         if vendor_id is not None:

@@ -9,16 +9,42 @@ class EntitiesSerializer(serializers.ModelSerializer):
         fields = ['entity_id', 'directorname', 'urasticname', 'name', 'urasticaddress',
                   'inn_kpp', 'bankname', 'account', 'corraccount', 'bankbink', 'mergeid']
        
-class KuGraphSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = KuGraph
-        fields = '__all__'
 
 class KuSerializer(serializers.ModelSerializer):
+    entity_name = serializers.SerializerMethodField()
+    vendor_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Ku
-        fields = '__all__'
+        fields = ['ku_id', 'vendor_id', 'vendor_name', 'entity_id', 'entity_name', 'period', 'date_start', 'date_end', 'status', 'date_actual', 'base', 'percent', 'graph_exists']
+    
+    def get_entity_name(self, obj):
+        try:
+            return obj.entity_id.name if obj.entity_id else None
+        except Entities.DoesNotExist:
+            return None
+
+    def get_vendor_name(self, obj):
+        try:
+            return obj.vendor_id.name if obj.vendor_id else None
+        except Vendors.DoesNotExist:
+            return None
    
+class KuGraphSerializer(serializers.ModelSerializer):
+    entity_name = serializers.SerializerMethodField()
+    vendor_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = KuGraph
+        fields = ['graph_id', 'ku_id', 'vendor_id', 'vendor_name',  'period', 'date_start', 'date_end', 'date_calc', 'status', 'sum_calc', 'sum_bonus', 'percent']
+    
+
+    def get_vendor_name(self, obj):
+        try:
+            return obj.vendor_id.name if obj.vendor_id else None
+        except Vendors.DoesNotExist:
+            return None
+        
 
 class UserSerializer(serializers.ModelSerializer):
      class Meta:
