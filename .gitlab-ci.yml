@@ -1,0 +1,269 @@
+image: docker:latest
+
+stages:
+  - build
+  - deploy
+#####################____TEST____######################
+#################____BUILD_TEST____####################
+build_test:
+  image: alpine
+  stage: build
+  variables:
+    DOCKER_FILE: docker/app/Dockerfile
+    IMAGE_TAG: api-test
+  before_script:
+    - 'true'
+  script:
+    - apk add --no-cache coreutils bash
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_TEST" >> ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # начало копирования данных для развертывания
+    - scp -r LAMA_ucup/                    $DEVSERVER:$BUILD_PATH/
+    - scp -r docker/                       $DEVSERVER:$BUILD_PATH/
+    - scp -r freeze.txt                    $DEVSERVER:$BUILD_PATH/
+    - scp docker/db/init-user.sql          $DEVSERVER:$BUILD_PATH/init-user.sql
+    - scp -r LAMA_ucup/.env                $DEVSERVER:$BUILD_PATH/.env
+    - scp $DOCKER_ENV_TEST                 $DEVSERVER:$BUILD_PATH/.env
+    # окончание копирования
+    #- ssh $DEVSERVER "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
+    - ssh $DEVSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker build -t $IMAGE_TAG -f $DOCKER_FILE ."
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "docker system prune -a -f"
+  tags:
+    - test_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_TEST
+  when: manual
+
+
+build_celeryworker_test:
+  stage: build
+  variables:
+    DOCKER_FILE: docker/celery/Dockerfile
+    IMAGE_TAG: celeryworker-test
+  before_script:
+    - 'true'
+  script:
+    - apk add --no-cache coreutils bash
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_TEST" >> ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # начало копирования данных для развертывания
+    #- scp -r LAMA_PlanogrammServices/      $DEVSERVER:$BUILD_PATH/
+    #- scp -r docker/                       $DEVSERVER:$BUILD_PATH/
+    #- scp -r freeze.txt                    $DEVSERVER:$BUILD_PATH/
+    #- scp -r LAMA_PlanogrammServices/.env  $DEVSERVER:$BUILD_PATH/.env
+    #- scp $DOCKER_ENV_TEST                 $DEVSERVER:$BUILD_PATH/.env
+    # окончание копирования
+    - ssh $DEVSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker build -t $IMAGE_TAG -f $DOCKER_FILE ."
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "docker system prune -a -f"
+  tags:
+    - test_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_TEST
+  when: manual
+
+
+build_celerybeat_test:
+  stage: build
+  variables:
+    DOCKER_FILE: docker/celery/Dockerfile
+    IMAGE_TAG: celerybeat-test
+  before_script:
+    - 'true'
+  script:
+    - apk add --no-cache coreutils bash
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_TEST" >> ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # начало копирования данных для развертывания
+    #- scp -r LAMA_PlanogrammServices/      $DEVSERVER:$BUILD_PATH/
+    #- scp -r docker/                       $DEVSERVER:$BUILD_PATH/
+    #- scp -r freeze.txt                    $DEVSERVER:$BUILD_PATH/
+    #- scp -r LAMA_PlanogrammServices/.env  $DEVSERVER:$BUILD_PATH/.env
+    #- scp $DOCKER_ENV_TEST                 $DEVSERVER:$BUILD_PATH/.env
+    # окончание копирования
+    - ssh $DEVSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker build -t $IMAGE_TAG -f $DOCKER_FILE ."
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "docker system prune -a -f"
+  tags:
+    - test_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_TEST
+  when: manual
+
+
+#################____DEPLOY_TEST____####################
+deploy_test:
+  stage: deploy
+  script:
+    - mkdir -p ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY_TEST_CURRENTSERVER" | tr -d '\r' | ssh-add -
+    - find . -type f -exec chmod 664 {} \;
+    - find . -type d -exec chmod 775 {} \;
+    # начало копирования данных для развертывания
+    - scp docker-compose.yml               $CURRENTSERVER:$PROJECT_PATH/docker-compose.yml
+    - scp -r LAMA_ucup/.env  $CURRENTSERVER:$PROJECT_PATH/.env
+    - scp $DOCKER_ENV_TEST                 $CURRENTSERVER:$PROJECT_PATH/.env
+    # окончание копирования
+    - ssh $CURRENTSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $CURRENTSERVER "cd $PROJECT_PATH && docker-compose pull"
+    - ssh $CURRENTSERVER "cd $PROJECT_PATH && docker-compose down" || true
+    - ssh $CURRENTSERVER "cd $PROJECT_PATH && docker-compose up --build -d"
+    #- ssh $CURRENTSERVER "docker system prune -a -f"
+  tags:
+    - test_deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_TEST
+  when: manual
+
+#####################____PORD____######################
+#################____BUILD_PORD____####################
+build_prod:
+  image: alpine
+  stage: build
+  variables:
+    DOCKER_FILE: docker/app/Dockerfile
+    IMAGE_TAG: api
+  before_script:
+    - 'true'
+  script:
+    - apk add --no-cache coreutils bash
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_TEST" >> ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # начало копирования данных для развертывания
+    - scp -r LAMA_ucup/                    $DEVSERVER:$BUILD_PATH/
+    - scp -r docker/                       $DEVSERVER:$BUILD_PATH/
+    - scp -r freeze.txt                    $DEVSERVER:$BUILD_PATH/
+    - scp docker/db/init-user.sql          $DEVSERVER:$BUILD_PATH/init-user.sql
+    - scp -r LAMA_PlanogrammServices/.env  $DEVSERVER:$BUILD_PATH/.env
+    - scp $DOCKER_ENV_PROD                 $DEVSERVER:$BUILD_PATH/.env
+    # окончание копирования
+    - ssh $DEVSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker build -t $IMAGE_TAG -f $DOCKER_FILE ."
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "docker system prune -a -f"
+  tags:
+    - build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_PROD
+  when: manual
+
+
+build_celeryworker_prod:
+  stage: build
+  variables:
+    DOCKER_FILE: docker/celery/Dockerfile
+    IMAGE_TAG: celeryworker
+  before_script:
+    - 'true'
+  script:
+    - apk add --no-cache coreutils bash
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_TEST" >> ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # начало копирования данных для развертывания
+    #- scp -r LAMA_PlanogrammServices/      $DEVSERVER:$BUILD_PATH/
+    #- scp -r docker/                       $DEVSERVER:$BUILD_PATH/
+    #- scp -r freeze.txt                    $DEVSERVER:$BUILD_PATH/
+    #- scp -r LAMA_PlanogrammServices/.env  $DEVSERVER:$BUILD_PATH/.env
+    #- scp $DOCKER_ENV_TEST                 $DEVSERVER:$BUILD_PATH/.env
+    # окончание копирования
+    - ssh $DEVSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker build -t $IMAGE_TAG -f $DOCKER_FILE ."
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "docker system prune -a -f"
+  tags:
+    - build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_PROD
+  when: manual
+
+
+build_celerybeat_prod:
+  stage: build
+  variables:
+    DOCKER_FILE: docker/celery/Dockerfile
+    IMAGE_TAG: celerybeat
+  before_script:
+    - 'true'
+  script:
+    - apk add --no-cache coreutils bash
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY_TEST" >> ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    # начало копирования данных для развертывания
+    #- scp -r LAMA_PlanogrammServices/      $DEVSERVER:$BUILD_PATH/
+    #- scp -r docker/                       $DEVSERVER:$BUILD_PATH/
+    #- scp -r freeze.txt                    $DEVSERVER:$BUILD_PATH/
+    #- scp -r LAMA_PlanogrammServices/.env  $DEVSERVER:$BUILD_PATH/.env
+    #- scp $DOCKER_ENV_TEST                 $DEVSERVER:$BUILD_PATH/.env
+    # окончание копирования
+    - ssh $DEVSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker build -t $IMAGE_TAG -f $DOCKER_FILE ."
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker tag $IMAGE_TAG $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "cd $BUILD_PATH/ && docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG"
+    - ssh $DEVSERVER "docker system prune -a -f"
+  tags:
+    - test_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_PROD
+  when: manual
+
+
+#################____DEPLOY_PROD____####################
+deploy_prod:
+  stage: deploy
+  script:
+    - mkdir -p ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY_PROD_PRODSERVER" | tr -d '\r' | ssh-add -
+    - find . -type f -exec chmod 664 {} \;
+    - find . -type d -exec chmod 775 {} \;
+    # начало копирования данных для развертывания
+    - scp docker-compose-prod.yml          $PRODSERVER:/$PROJECT_PATH_PROD/docker-compose.yml
+    - scp -r LAMA_ucup/.env  $PRODSERVER:/$PROJECT_PATH_PROD/.env
+    - scp $DOCKER_ENV_PROD                 $PRODSERVER:/$PROJECT_PATH_PROD/.env
+    # окончание копирования
+    - ssh $PRODSERVER "docker login -u aak-gitlab -p $CI_JOB_TOKEN_CUR $CI_REGISTRY"
+    - ssh $PRODSERVER "cd /$PROJECT_PATH_PROD && docker-compose pull"
+    - ssh $PRODSERVER "cd /$PROJECT_PATH_PROD && docker-compose down" || true
+    - ssh $PRODSERVER "cd /$PROJECT_PATH_PROD && docker-compose up --build -d"
+    #- ssh $CURRENTSERVER "docker system prune -a -f"
+  tags:
+    - deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $BRANCH_PROD
+  when: manual

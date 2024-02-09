@@ -1,7 +1,9 @@
 NAME="LAMA_ucup app"
 echo "Starting $NAME as `whoami`"
+
 PROC_NUM="$(getconf _NPROCESSORS_ONLN)"
 THREADS=$(($PROC_NUM * 2))
+
 case ${DEV_SERVER} in
   true | 1)
     echo "Check migrations"
@@ -11,12 +13,15 @@ case ${DEV_SERVER} in
   *)
     ;;
 esac
+
 echo "Migrating..."
 python3 manage.py check
 python3 manage.py migrate --noinput
+
 echo "Translation..."
 python3 manage.py makemessages -l en
 python3 manage.py makemessages -l ru
+
 echo "Statics..."
 python3 manage.py collectstatic --noinput
 case ${DEV_SERVER} in

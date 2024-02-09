@@ -171,7 +171,7 @@ class KuListView(generics.ListCreateAPIView):
 
         if entity_ids:
             # Фильтруем поставщиков на основе предоставленного entityid
-            queryset = queryset.filter(entity_ids__in=entity_ids)
+            queryset = queryset.filter(entity_id__in=entity_ids)
 
         if vendor_id is not None:
             queryset = queryset.filter(vendor_id=vendor_id)
