@@ -2,6 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from ..models import *
 
+class ClassifierTestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassifierTest
+        fields = '__all__'
 
 class EntitiesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,7 +35,6 @@ class KuSerializer(serializers.ModelSerializer):
             return None
    
 class KuGraphSerializer(serializers.ModelSerializer):
-    entity_name = serializers.SerializerMethodField()
     vendor_name = serializers.SerializerMethodField()
 
     class Meta:

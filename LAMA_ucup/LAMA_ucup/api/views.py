@@ -20,6 +20,11 @@ class BasePagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
+class ClassifierTestList(generics.ListCreateAPIView):
+    permission_classes = [AllowAny]
+    queryset = ClassifierTest.objects.all()
+    serializer_class = ClassifierTestSerializer
+
 class EntitiesListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     serializer_class = EntitiesSerializer #обрабатывает queryset
@@ -411,6 +416,35 @@ def create_graph(request):
             # month = next_month
             year += 1
             # day = 1  # Начинайте с первого дня следующего месяца
+        
+    if period == 'Квартал':
+        
+        while date_end < date_end_initial:
+            
+            last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #последний месяц квартала
+            
+            last_day = calendar.monthrange(year, last_month_of_quarter )[1] #количество дней месяца # 1 квартал: январь1, февраль2, март3 2 квартал: 4 5 6, 3 квартал
+
+            date_end = f"{year}-{last_month_of_quarter:02d}-{last_day:02d}"
+
+            if date_end > date_end_initial: #проверка последнего графика 
+                date_end = date_end_initial
+
+            next_month = last_month_of_quarter % 12 + 1
+            next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
+
+           
+            
+            graph_data_list.append({
+                'date_start': f"{year}-{month:02d}-{day:02d}",
+                'date_end': date_end,
+                'date_calc': f"{next_month_year}-{next_month:02d}-{date_calc}",
+            })
+
+            # Переходите к следующему месяцу
+            month = next_month
+            year = next_month_year
+            day = 1  # Начинайте с первого дня следующего месяца
 
     for date_range in graph_data_list:
         start_date = date_range['date_start']

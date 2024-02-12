@@ -11,6 +11,19 @@ from datetime import datetime
 
 from django.forms import ValidationError
 
+
+class ClassifierTest(models.Model):
+    classifier_code = models.CharField(max_length=12, unique=True)
+    name = models.CharField(max_length=50)
+    parent_code = models.CharField(max_length=12)
+
+    class Meta:
+        managed = False
+        db_table = 'app_classifier'
+
+    def __str__(self):
+        return f"Код классификатора: {self.classifier_code}, Имя: {self.name}, Код родителя: {self.parent_code}"
+    
 class Article(models.Model):
     name = models.CharField(blank=True, null=True)
     id = models.CharField(primary_key=True)

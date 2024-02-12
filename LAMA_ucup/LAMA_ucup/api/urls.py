@@ -22,6 +22,8 @@ from .views import *
 app_name = 'LAMA_ucup'
 
 urlpatterns = [
+    path('classifiersTest/', ClassifierTestList.as_view()),
+
     path('entitieslist/', EntitiesListView.as_view()),
 
     path('kulist/', KuListView.as_view()),
