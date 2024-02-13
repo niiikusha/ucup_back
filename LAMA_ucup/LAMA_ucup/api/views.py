@@ -1,3 +1,4 @@
+import json
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -79,13 +80,18 @@ class VendDocListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Venddoc.objects.all().order_by('vendor_id')
+
         entity_id = self.request.query_params.get('entity_id', None)
         vendor_id = self.request.query_params.get('vendor_id', None)
-        
-        # Проверяем, предоставлен ли entityid в параметрах запроса
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
+
+        if start_date and end_date:
+            queryset = queryset.filter(invoice_date__range=[start_date, end_date])
+
         if entity_id is not None:
-            # Фильтруем поставщиков на основе предоставленного entityid
             queryset = queryset.filter(entity_id=entity_id).order_by('vendor_id')
+
         if vendor_id is not None:
             queryset = queryset.filter(vendor_id=vendor_id).order_by('vendor_id')
     
@@ -162,11 +168,28 @@ class KuListView(generics.ListCreateAPIView):
         # Вызвать метод save у сериализатора для создания экземпляра Ku
         instance = serializer.save()
 
-        # Вызвать метод calculate_base для установки значения base
-        #instance.calculate_base()
-
     def get_queryset(self):
         queryset = Ku.objects.all().order_by('ku_id')
+        # requirements_param = self.request.query_params.getlist('requirements', None)
+        # requirements_mass = self.request.query_params.getlist('requirements', [])
+        # requirements_string = self.request.query_params.get('requirements', None)
+        # print('requirements_param', requirements_param)
+        # print('requirements_mass', requirements_mass)
+        # print('requirements_string', requirements_string)
+        # if requirements_param:
+        #     try:
+        #         requirements = json.loads(requirements_param)
+        #         print('requirement', requirements)
+        #         if requirements.get('type_item') == 'Все':
+        #             # Если тип товара 'Все', игнорируем фильтры по отдельным параметрам
+        #             return queryset.order_by('-ku_id')
+
+        #         # ... (ваш текущий код поиска и фильтрации)
+
+        #     except json.JSONDecodeError as e:
+        #         print(f"Error decoding JSON: {e}")
+            
+        
         ku_ids = self.request.query_params.getlist('ku_id', [])
         entity_ids = self.request.query_params.getlist('entity_id', [])
         vendor_id = self.request.query_params.get('vendor_id', None)
@@ -205,6 +228,8 @@ class KuListView(generics.ListCreateAPIView):
         except Exception as e:
             print(f"Error in queryset filtering: {e}")
         return queryset.order_by('-ku_id')
+    
+        
     
 
 class KuAPIUpdate(generics.RetrieveUpdateAPIView):
@@ -282,7 +307,11 @@ class ProductsListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Products.objects.all().order_by('itemid')
-        
+
+        categories = self.request.query_params.getlist('categories_l4', [])
+        if categories:
+            queryset = queryset.filter(classifier__l4__in = categories)
+
         search_query = self.request.query_params.get('search', '') 
         try:
             queryset = queryset.filter( 
@@ -324,8 +353,6 @@ def create_graph(request):
         
         while date_end < date_end_initial:
             
-            # last_month_of_quarter = ((month - 1) // 3 + 1) * 3 #квартал
-            # Формируйте date_end как последний день месяца
             last_day = calendar.monthrange(year, month)[1] #количество дней месяца
 
             date_end = f"{year}-{month:02d}-{last_day:02d}"
@@ -336,10 +363,6 @@ def create_graph(request):
             next_month = month % 12 + 1
             next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
 
-            # next_quarter = ((last_month_of_quarter - 1) // 3 + 1) % 4 + 1 #квартал
-            # next_quarter_year = year + (1 if next_quarter == 1 else 0)
-            
-            
             graph_data_list.append({
                 'date_start': f"{year}-{month:02d}-{day:02d}",
                 'date_end': date_end,
@@ -385,10 +408,6 @@ def create_graph(request):
         date_end = f"{year}-{month:02d}-{last_day:02d}"
         date_start = f"{year}-{month:02d}-{day:02d}"
         while date_end < date_end_initial:
-            
-            # last_day = calendar.monthrange(year, month)[1] #количество дней месяца
-            # half_year = 6 # кол-во меясцев в полугодии
-            # date_end = f"{year}-{month:02d}-{last_day:02d}"
         
             if month <= 6:
                 date_end = f"{year}-{6:02d}-{30:02d}" # до конца июня
@@ -398,9 +417,6 @@ def create_graph(request):
             if date_end > date_end_initial: #проверка последнего графика 
                 date_end = date_end_initial
 
-            # next_month = month % 12 + 1
-            # next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
-            
             graph_data_list.append({
                 'date_start': date_start,
                 'date_end': date_end,
@@ -413,9 +429,7 @@ def create_graph(request):
             else:
                 date_start = f"{year}-{7:02d}-{1:02d}" #с начала июля
 
-            # month = next_month
             year += 1
-            # day = 1  # Начинайте с первого дня следующего месяца
         
     if period == 'Квартал':
         
@@ -432,9 +446,7 @@ def create_graph(request):
 
             next_month = last_month_of_quarter % 12 + 1
             next_month_year = year + (1 if next_month == 1 else 0) #проверка на переполнение месяцев
-
            
-            
             graph_data_list.append({
                 'date_start': f"{year}-{month:02d}-{day:02d}",
                 'date_end': date_end,
@@ -444,7 +456,7 @@ def create_graph(request):
             # Переходите к следующему месяцу
             month = next_month
             year = next_month_year
-            day = 1  # Начинайте с первого дня следующего месяца
+            day = 1  
 
     for date_range in graph_data_list:
         start_date = date_range['date_start']

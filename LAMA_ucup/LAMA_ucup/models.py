@@ -146,30 +146,6 @@ class Ku(models.Model):
         managed = False
         db_table = 'KU'
 
-    def calculate_base(self): #расчет базы по всем товарам всех накладных
-        if self.date_actual:
-            date_end = self.date_actual
-        else:
-            date_end = self.date_end
-        
-        venddoc_rows = Venddoc.objects.filter( # Найти строки в Venddoc, соответствующие условиям
-            vendor_id=self.vendor_id,
-            entity_id=self.entity_id,
-            invoice_date__range=[self.date_start, date_end]
-        )
-        total_base = 0
-        # Итерировать по всем найденным строкам в Venddoc
-        for venddoc_row in venddoc_rows:
-        # Найти все соответствующие строки в Venddoclines
-            venddoclines_rows = Venddoclines.objects.filter(docid=venddoc_row.docid)
-        # Итерировать по всем найденным строкам в Venddoclines
-            for venddoclines_row in venddoclines_rows:
-                # Добавить значение amount к общей базе
-                total_base += venddoclines_row.amount
-        # Установить значение base равным общей базе
-        self.base = total_base
-        self.save()
-
     def save(self, *args, **kwargs): #создание id КУ
         if not self.ku_id:
             Ku._count += 1

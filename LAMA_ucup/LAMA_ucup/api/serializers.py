@@ -65,12 +65,13 @@ class ClassifierSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProductsSerializer(serializers.ModelSerializer):
+    l4 = serializers.SerializerMethodField()
     brand_name = serializers.SerializerMethodField()
     classifier_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Products
-        fields = ['itemid', 'name', 'brand_name', 'classifier_name'] # 'classifier', 'brand'
+        fields = ['itemid', 'name', 'brand_name', 'classifier_name', 'classifier', 'l4'] # 'classifier', 'brand'
 
     def get_brand_name(self, obj):
         try:
@@ -80,7 +81,13 @@ class ProductsSerializer(serializers.ModelSerializer):
 
     def get_classifier_name(self, obj):
         try:
-            return obj.classifier.l3_name if obj.classifier else None
+            return obj.classifier.l4_name if obj.classifier else None
+        except Classifier.DoesNotExist:
+            return None
+        
+    def get_l4(self, obj):
+        try:
+            return obj.classifier.l4 if obj.classifier else None
         except Classifier.DoesNotExist:
             return None
 

@@ -34,7 +34,7 @@ urlpatterns = [
     path('graphdetail/<int:pk>/', GraphDetailView.as_view()),
     path('create_graph/', create_graph, name='create-graph'),
 
-    path('productslist', ProductsListView.as_view()),
+    path('productslist/', ProductsListView.as_view()),
     path('productsfilter', products_filter, name ='products_filter'),
 
     path('venddoclist/', VendDocListView.as_view()),
