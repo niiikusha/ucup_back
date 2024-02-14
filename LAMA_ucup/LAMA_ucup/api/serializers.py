@@ -55,14 +55,21 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
       
 class BrandClassifierSerializer(serializers.ModelSerializer):
+  
+
     class Meta:
         model = Brandclassifier
-        fields = '__all__'
+        fields = ['classifierid', 'brand_name', 'producer_name']
+
+ 
 
 class ClassifierSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Classifier
-        fields = '__all__'
+        fields = ['classifierid', 'l1', 'l1_name', 'l2', 'l2_name', 'l3', 'l3_name', 'l4', 'l4_name'] 
+    
+
 
 class ProductsSerializer(serializers.ModelSerializer):
     l4 = serializers.SerializerMethodField()

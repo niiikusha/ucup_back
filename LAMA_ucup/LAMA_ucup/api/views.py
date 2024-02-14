@@ -48,7 +48,30 @@ class BrandClassifierListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Brandclassifier.objects.all() #данные которые будут возвращаться
     serializer_class = BrandClassifierSerializer #обрабатывает queryset
-    pagination_class = BasePagination
+    # pagination_class = BasePagination
+
+    def get_queryset(self):
+        queryset = Brandclassifier.objects.all()
+        queryset_Classifier = Classifier.objects.all()
+        producer_name = self.request.query_params.get('producer_name', None)
+        l4 = self.request.query_params.get('l4', None)
+        if l4  is not None:
+            queryset_Classifier = queryset_Classifier.filter(l4=l4)
+            classifier_ids = queryset_Classifier.values_list('classifierid', flat=True)
+
+            queryset_Products = Products.objects.all()
+            queryset_Products = queryset_Products.filter(classifier__in=classifier_ids)
+            products_ids = queryset_Products.values_list('brand', flat=True)
+            queryset = queryset.filter(classifierid__in=products_ids)
+
+            
+        if producer_name is not None:
+            queryset = queryset.filter(producer_name=producer_name)
+
+        # if l4 is not None:
+        #     queryset = queryset.filter(l4=l4)
+
+        return queryset
 
 class ClassifierListView(generics.ListAPIView):
     permission_classes = [AllowAny] 

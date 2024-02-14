@@ -44,7 +44,7 @@ urlpatterns = [
     #path('vendorlist1', VendorsListView.as_view()),
     
     path('classifierlist',  ClassifierListView.as_view()),
-    path('brandlist', BrandClassifierListView.as_view()),
+    path('brandlist/', BrandClassifierListView.as_view()),
 
     path('me/', me_view),
 ]
