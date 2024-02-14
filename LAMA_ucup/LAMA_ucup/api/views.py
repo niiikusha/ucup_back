@@ -48,7 +48,7 @@ class BrandClassifierListView(generics.ListAPIView):
     permission_classes = [AllowAny] 
     queryset = Brandclassifier.objects.all() #данные которые будут возвращаться
     serializer_class = BrandClassifierSerializer #обрабатывает queryset
-    # pagination_class = BasePagination
+    pagination_class = BasePagination
 
     def get_queryset(self):
         queryset = Brandclassifier.objects.all()
@@ -64,12 +64,8 @@ class BrandClassifierListView(generics.ListAPIView):
             products_ids = queryset_Products.values_list('brand', flat=True)
             queryset = queryset.filter(classifierid__in=products_ids)
 
-            
         if producer_name is not None:
             queryset = queryset.filter(producer_name=producer_name)
-
-        # if l4 is not None:
-        #     queryset = queryset.filter(l4=l4)
 
         return queryset
 
@@ -355,9 +351,12 @@ def create_graph(request):
 
     # Получите данные от пользователя
     ku_id = input_data.get('ku_id')
+    print('ku_id', ku_id)
     period = input_data.get('period')
     date_start = input_data.get('date_start')
     date_end_initial = input_data.get('date_end')
+    if input_data.get('date_actual'):
+        date_end_initial = input_data.get('date_actual')
     percent = input_data.get('percent')
     vendor_id = input_data.get('vendor_id')
     entity_id = input_data.get('entity_id')

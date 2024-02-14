@@ -17,7 +17,7 @@ class EntitiesSerializer(serializers.ModelSerializer):
 class KuSerializer(serializers.ModelSerializer):
     entity_name = serializers.SerializerMethodField()
     vendor_name = serializers.SerializerMethodField()
-
+    # ku_id = serializers.ReadOnlyField(source='formatted_ku_id')
     class Meta:
         model = Ku
         fields = ['ku_id', 'vendor_id', 'vendor_name', 'entity_id', 'entity_name', 'period', 'date_start', 'date_end', 'status', 'date_actual', 'base', 'percent', 'graph_exists']
@@ -36,6 +36,7 @@ class KuSerializer(serializers.ModelSerializer):
    
 class KuGraphSerializer(serializers.ModelSerializer):
     vendor_name = serializers.SerializerMethodField()
+    # ku_id = serializers.ReadOnlyField(source='formatted_ku_id')
 
     class Meta:
         model = KuGraph
