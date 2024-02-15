@@ -17,7 +17,7 @@ import numpy as np
 from ..models import Entities, Ku
     
 class BasePagination(PageNumberPagination):
-    page_size = 20  # Количество записей на странице
+    page_size = 50  # Количество записей на странице
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -100,7 +100,8 @@ class VendDocListView(generics.ListAPIView):
     def get_queryset(self):
         queryset = Venddoc.objects.all().order_by('vendor_id')
 
-        entity_id = self.request.query_params.get('entity_id', None)
+        #entity_id = self.request.query_params.get('entity_id', None)
+        entity_ids = self.request.query_params.getlist('entity_id', [])
         vendor_id = self.request.query_params.get('vendor_id', None)
         start_date = self.request.query_params.get('start_date', None)
         end_date = self.request.query_params.get('end_date', None)
@@ -108,8 +109,8 @@ class VendDocListView(generics.ListAPIView):
         if start_date and end_date:
             queryset = queryset.filter(invoice_date__range=[start_date, end_date])
 
-        if entity_id is not None:
-            queryset = queryset.filter(entity_id=entity_id).order_by('vendor_id')
+        if entity_ids:
+            queryset = queryset.filter(entity_id__in=entity_ids).order_by('vendor_id')
 
         if vendor_id is not None:
             queryset = queryset.filter(vendor_id=vendor_id).order_by('vendor_id')
@@ -351,6 +352,8 @@ def create_graph(request):
 
     # Получите данные от пользователя
     ku_id = input_data.get('ku_id')
+    print('ku_id', ku_id)
+   # ku_id = ku_id[2:]
     print('ku_id', ku_id)
     period = input_data.get('period')
     date_start = input_data.get('date_start')

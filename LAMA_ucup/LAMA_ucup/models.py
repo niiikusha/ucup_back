@@ -130,8 +130,8 @@ class Vendors(models.Model):
         db_table = 'Vendors'
 
 class Ku(models.Model):
-    #ku_id = models.CharField(db_column='KU_id', primary_key=True, editable=False)  # Field name made lowercase.
-    ku_id = models.BigAutoField(db_column='KU_id', primary_key=True)  # Field name made lowercase.
+    ku_id = models.CharField(db_column='Ku_id', primary_key=True, editable=False)  # Field name made lowercase.
+    #ku_id = models.BigAutoField(db_column='KU_id', primary_key=True)  # Field name made lowercase.
     vendor_id = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase. 
     entity_id = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
@@ -142,6 +142,8 @@ class Ku(models.Model):
     base = models.FloatField(db_column='Base', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
     graph_exists = models.BooleanField(db_column='graph_Exists', blank=True, null=True)  # Field name made lowercase.
+    # ku = models.BigAutoField(db_column='Ku')  # Field name made lowercase.
+    # ku_id = models.CharField(db_column='Ku_id', primary_key=True)  # Field name made lowercase.
     _count = 0  # Статическая переменная
 
     class Meta:
@@ -149,10 +151,20 @@ class Ku(models.Model):
         db_table = 'KU'
 
     def save(self, *args, **kwargs): #создание id КУ
-        # if not self.ku_id:
-        #     Ku._count += 1
-        #     #count = Ku.objects.count() + 1
-        #     self.ku_id = f'KY{Ku._count:05}'
+        if not self.ku_id:
+            if Ku.objects.order_by('-ku_id').first():
+                latest_ku = Ku.objects.order_by('-ku_id').first()
+                ku_int = int(latest_ku.ku_id[2:])
+                Ku._count = ku_int + 1
+            else:
+                Ku._count = 1
+            
+           
+            
+            #Ku._count = ku_int + 1
+            # Ku._count += 1
+            # count = Ku.objects.count() + 1
+            self.ku_id = f'KY{Ku._count:05}'
         
         if not self.date_end or self.date_end > self.date_start + relativedelta(years=2): #проверка даты окончания
             self.date_actual = self.date_start + relativedelta(years=2)
@@ -170,8 +182,8 @@ class Ku(models.Model):
 class KuGraph(models.Model):
     graph_id = models.AutoField(db_column='Graph_id', primary_key=True)  # Используем AutoField для автоматического заполнения  # Field name made lowercase.
     vendor_id = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
-    #ku_id = models.ForeignKey(Ku, models.DO_NOTHING, db_column='Ku_id')  # Field name made lowercase.
     ku_id = models.ForeignKey(Ku, models.DO_NOTHING, db_column='Ku_id')  # Field name made lowercase.
+    #ku_id = models.ForeignKey(Ku, models.DO_NOTHING, db_column='Ku_id')  # Field name made lowercase.
     period = models.CharField(db_column='Period', max_length=10)  # Field name made lowercase.
     date_start = models.DateField(db_column='Date_start')  # Field name made lowercase.
     date_end = models.DateField(db_column='Date_end')  # Field name made lowercase.
