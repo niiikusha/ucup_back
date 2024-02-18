@@ -197,9 +197,9 @@ class KuGraph(models.Model):
         managed = False
         db_table = 'KU_graph'
 
-    @property
-    def formatted_ku_id(self):
-        return f'KY{self.ku_id.ku_id:04d}' if self.ku_id else ''
+    # @property
+    # def formatted_ku_id(self):
+    #     return f'KY{self.ku_id.ku_id:04d}' if self.ku_id else ''
     # def formatted_ku_id(self):
     #     return f'КУ{self.ku_id:04d}'
 
