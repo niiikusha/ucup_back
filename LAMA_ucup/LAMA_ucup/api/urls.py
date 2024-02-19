@@ -29,6 +29,8 @@ urlpatterns = [
     path('kulist/', KuListView.as_view()),
     path('ku/<str:pk>/', KuAPIUpdate.as_view()),
     path('kudetail/<str:pk>/', KuDetailView.as_view()),
+    path('ku_create/', ku_create),
+    path('included_product/', included_products_create), 
 
     path('graphlist/', GraphListView.as_view()), 
     path('graphdetail/<int:pk>/', GraphDetailView.as_view()),

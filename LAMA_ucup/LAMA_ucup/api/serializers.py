@@ -7,6 +7,16 @@ class ClassifierTestSerializer(serializers.ModelSerializer):
         model = ClassifierTest
         fields = '__all__'
 
+class IncludedProductsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IncludedProducts
+        fields = '__all__'
+
+class IncludedProductsList(serializers.ModelSerializer):
+    class Meta:
+        model = IncludedProductsList
+        fields = '__all__'
+
 class EntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entities

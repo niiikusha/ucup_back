@@ -352,9 +352,6 @@ def create_graph(request):
 
     # Получите данные от пользователя
     ku_id = input_data.get('ku_id')
-    print('ku_id', ku_id)
-   # ku_id = ku_id[2:]
-    print('ku_id', ku_id)
     period = input_data.get('period')
     date_start = input_data.get('date_start')
     date_end_initial = input_data.get('date_end')
@@ -523,6 +520,49 @@ def create_graph(request):
     data = [serializer_instance.data for serializer_instance in serializer_instances]
     return JsonResponse(data, status=status.HTTP_201_CREATED, safe=False)
 
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def included_products_create(request):
+#     included_products_data = JSONParser().parse(request)
+#     serializer = IncludedProductsSerializer(data=included_products_data)
+    
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def included_products_create(request):
+    # Проверяем, являются ли входные данные списком
+    if isinstance(request.data, list):
+        included_products_data = request.data
+    elif isinstance(request.data, dict):
+        included_products_data = [request.data]
+    else:
+        return Response({'error': 'Invalid data format. Expected a list or a dictionary.'}, status=status.HTTP_400_BAD_REQUEST)
+    print('included_products_data', included_products_data)
+    # Используем many=True при создании сериализатора
+    serializer = IncludedProductsSerializer(data=included_products_data, many=True)
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def ku_create(request):
+    ku_data = JSONParser().parse(request)
+    serializer = KuSerializer(data=ku_data)
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def products_filter(request): 

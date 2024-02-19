@@ -87,6 +87,29 @@ class Entities(models.Model):
         managed = False
         db_table = 'Entities'
 
+class IncludedProducts(models.Model):
+    ku_id = models.CharField(db_column='KU_id', blank=True, null=True)  # Field name made lowercase.
+    item_type = models.CharField(db_column='Item_type', blank=True, null=True)  # Field name made lowercase.
+    item_code = models.CharField(db_column='Item_code', blank=True, null=True)  # Field name made lowercase.
+    item_name = models.CharField(db_column='Item_name', blank=True, null=True)  # Field name made lowercase.
+    in_prod_id = models.BigAutoField(db_column='In_prod_Id', primary_key=True)  # Field name made lowercase.
+    brand = models.CharField(db_column='Brand', blank=True, null=True)  # Field name made lowercase.
+    producer = models.CharField(db_column='Producer', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'Included_products'
+
+class IncludedProductsList(models.Model):
+    graph_id = models.BigIntegerField(db_column='Graph_id', primary_key=True)  # Field name made lowercase. The composite primary key (Graph_id, Product_id) found, that is not supported. The first column is selected.
+    product_id = models.CharField(db_column='Product_id')  # Field name made lowercase.
+    invoice_id = models.BigIntegerField(db_column='Invoice_id', blank=True, null=True)  # Field name made lowercase.
+    amount = models.FloatField(db_column='Amount', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'Included_products_list'
+        unique_together = (('graph_id', 'product_id'),)
 
 class Invoices(models.Model):
     invoice_id = models.BigIntegerField(db_column='Invoice_id', primary_key=True)  # Field name made lowercase.
@@ -158,12 +181,6 @@ class Ku(models.Model):
                 Ku._count = ku_int + 1
             else:
                 Ku._count = 1
-            
-           
-            
-            #Ku._count = ku_int + 1
-            # Ku._count += 1
-            # count = Ku.objects.count() + 1
             self.ku_id = f'KY{Ku._count:05}'
         
         if not self.date_end or self.date_end > self.date_start + relativedelta(years=2): #проверка даты окончания
@@ -173,10 +190,6 @@ class Ku(models.Model):
             raise ValidationError("Дата окончания не должна быть раньше даты начала")
         
         super().save(*args, **kwargs)
-
-    @property
-    def formatted_ku_id(self):
-        return f'KY{self.ku_id:04d}'
 
 
 class KuGraph(models.Model):
@@ -196,12 +209,6 @@ class KuGraph(models.Model):
     class Meta:
         managed = False
         db_table = 'KU_graph'
-
-    # @property
-    # def formatted_ku_id(self):
-    #     return f'KY{self.ku_id.ku_id:04d}' if self.ku_id else ''
-    # def formatted_ku_id(self):
-    #     return f'КУ{self.ku_id:04d}'
 
 
 class Products(models.Model):
@@ -233,6 +240,18 @@ class Venddoc(models.Model):
         managed = False
         db_table = 'VendDoc'
 
+    def save_venddoclines_to_included_products(self, venddoclines_rows):
+        """
+        Сохранить данные из venddoclines_rows в IncludedProductsList.
+        """
+        for venddoclines_row in venddoclines_rows:
+                included_product = IncludedProductsList(
+                    product_id=venddoclines_row.product_id,
+                    invoice_id=venddoclines_row.doc_id,
+                    amount=venddoclines_row.amount,
+                )
+                included_product.save()
+                
     def products_amount_sum_in_range(self, start_date, end_date, vendor_id, entity_id):
         """
         Рассчитать сумму products_amount в указанном диапазоне дат и для указанных vendor_id и entity_id.
@@ -247,7 +266,29 @@ class Venddoc(models.Model):
             )
             .aggregate(sum_products_amount=models.Sum('products_amount'))['sum_products_amount'] or 0
         )
+    
 
+    def products_amount_sum_in_range_vse(self, start_date, end_date, vendor_id, entity_id):
+        """
+        Рассчитать сумму products_amount в указанном диапазоне дат и для указанных vendor_id и entity_id.
+        """
+        venddoc_rows = Venddoc.objects.filter( # Найти строки в Venddoc, соответствующие условиям
+            vendor_id=vendor_id,
+            entity_id=entity_id,
+            invoice_date__gte=start_date,
+            invoice_date__lte=end_date
+        )
+        for venddoc_row in venddoc_rows:
+        # Найти все соответствующие строки в Venddoclines
+            venddoclines_rows = Venddoclines.objects.filter(docid=venddoc_row.docid)
+            self.save_venddoclines_to_included_products(venddoclines_rows)
+        # Итерировать по всем найденным строкам в Venddoclines
+        #     for venddoclines_row in venddoclines_rows:
+        #         # Добавить значение amount к общей базе
+        #         total_base += venddoclines_row.amount
+        # # Установить значение base равным общей базе
+        # self.base = total_base
+        # self.save()
 
 class Venddoclines(models.Model):
     recid = models.BigIntegerField(db_column='RecId', primary_key=True)  # Field name made lowercase.
