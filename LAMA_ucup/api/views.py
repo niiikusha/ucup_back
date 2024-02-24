@@ -29,7 +29,8 @@ class ClassifierTestList(generics.ListCreateAPIView):
 class IncludedProductsListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = IncludedProductsListSerializer
-
+    pagination_class = BasePagination
+    
     def get_queryset(self):
         queryset = IncludedProductsList.objects.all()
         graph_id = self.request.query_params.get('graph_id', None)
@@ -300,6 +301,8 @@ class KuDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
     queryset = Ku.objects.all()
     serializer_class = KuSerializer
 
+
+
 class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView): 
     permission_classes = [AllowAny]
     serializer_class = KuGraphSerializer
@@ -349,7 +352,7 @@ class GraphListView(generics.ListCreateAPIView, generics.DestroyAPIView):
                 Q(vendor_id__name__icontains=search_query)
                 )
 
-        return queryset
+        return queryset.order_by('-graph_id')
 
 class GraphDetailView(generics.RetrieveUpdateDestroyAPIView): #добавление
     permission_classes = [AllowAny]
@@ -584,6 +587,61 @@ def create_graph(request):
 #         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class IncludedСonditionListView(generics.ListAPIView): #добавление/обновление/удаление в одном
+    permission_classes = [AllowAny]
+    serializer_class = IncludedProductsSerializer
+
+    def get_queryset(self):
+        queryset = IncludedProducts.objects.all()
+        ku_id = self.request.query_params.get('ku_id', None)
+        
+        # Проверяем, предоставлен ли entityid в параметрах запроса
+        if ku_id:
+            # Фильтруем поставщиков на основе предоставленного entityid
+            queryset = queryset.filter(ku_id=ku_id)
+    
+        return queryset
+
+class IncludedProductsView(generics.RetrieveUpdateDestroyAPIView): #добавление/обновление/удаление в одном
+    permission_classes = [AllowAny]
+    queryset = IncludedProducts.objects.all()
+    serializer_class = IncludedProductsSerializer
+
+
+
+class IncludedProductsBulkUpdateView(generics.UpdateAPIView):
+    permission_classes = [AllowAny]
+    queryset = IncludedProducts.objects.all()
+    serializer_class = IncludedProductsSerializer
+
+    def get_queryset(self):
+        queryset = IncludedProducts.objects.all()
+        ku_id = self.request.query_params.get('ku_id', None)
+        
+        # Проверяем, предоставлен ли ku_id в параметрах запроса
+        if ku_id:
+            # Фильтруем объекты на основе предоставленного ku_id
+            queryset = queryset.filter(ku_id=ku_id)
+
+        return queryset
+
+    def update(self, request, *args, **kwargs):
+        # Переопределение метода update для обработки обновления нескольких объектов
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+
+
+
+
+
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

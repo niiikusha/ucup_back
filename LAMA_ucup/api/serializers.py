@@ -13,9 +13,41 @@ class IncludedProductsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class IncludedProductsListSerializer(serializers.ModelSerializer):
+    product_qty = serializers.SerializerMethodField()
+    product_name = serializers.SerializerMethodField()
+    category_name = serializers.SerializerMethodField()
+    producer_name = serializers.SerializerMethodField()
+
     class Meta:
         model = IncludedProductsList
-        fields = '__all__'
+        fields = ['graph_id', 'product_id', 'amount', 'invoice_id', 'inc_prod_list', 'product_qty', 'product_name' ,'category_name', 'producer_name']
+
+    def get_product_qty(self, obj):
+        try:
+            return obj.rec_id.qty if obj.rec_id else None
+        except Entities.DoesNotExist:
+            return None
+        
+    def get_product_name(self, obj):
+        try:
+            return obj.product_id.name if obj.product_id else None
+        except Entities.DoesNotExist:
+            return None
+        
+
+    def get_category_name(self, obj):
+        try:
+           return obj.product_id.classifier.l4_name if obj.product_id.classifier else None
+        except Entities.DoesNotExist:
+            return None
+        
+    def get_producer_name(self, obj):
+        try:
+            return obj.product_id.brand.brand_name if obj.product_id.brand else None
+        except Entities.DoesNotExist:
+            return None
+
+   
 
 class EntitiesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,16 +78,29 @@ class KuSerializer(serializers.ModelSerializer):
    
 class KuGraphSerializer(serializers.ModelSerializer):
     vendor_name = serializers.SerializerMethodField()
-    # ku_id = serializers.ReadOnlyField(source='formatted_ku_id')
+    entity_id = serializers.SerializerMethodField()
+    entity_name = serializers.SerializerMethodField()
 
     class Meta:
         model = KuGraph
-        fields = ['graph_id', 'ku_id', 'vendor_id', 'vendor_name',  'period', 'date_start', 'date_end', 'date_calc', 'status', 'sum_calc', 'sum_bonus', 'percent']
+        fields = ['graph_id', 'ku_id', 'vendor_id', 'vendor_name', 'entity_id', 'entity_name', 'period', 'date_start', 'date_end', 'date_calc', 'status', 'sum_calc', 'sum_bonus', 'percent']
     
 
     def get_vendor_name(self, obj):
         try:
             return obj.vendor_id.name if obj.vendor_id else None
+        except Vendors.DoesNotExist:
+            return None
+        
+    def get_entity_name(self, obj):
+        try:
+            return obj.vendor_id.entity_id.name if obj.vendor_id else None
+        except Vendors.DoesNotExist:
+            return None
+        
+    def get_entity_id(self, obj):
+        try:
+            return obj.vendor_id.entity_id.entity_id if obj.vendor_id else None
         except Vendors.DoesNotExist:
             return None
         

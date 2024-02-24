@@ -378,17 +378,5 @@ class Migration(migrations.Migration):
             name='vendor_id',
             field=models.ForeignKey(db_column='Vendor_id', on_delete=django.db.models.deletion.DO_NOTHING, to='LAMA_ucup.vendors'),
         ),
-        migrations.CreateModel(
-            name='IncludedProductsList',
-            fields=[
-                ('graph_id', models.BigIntegerField(db_column='Graph_id', primary_key=True, serialize=False)),
-                ('product_id', models.CharField(db_column='Product_id')),
-                ('invoice_id', models.BigIntegerField(blank=True, db_column='Invoice_id', null=True)),
-                ('amount', models.FloatField(blank=True, db_column='Amount', null=True)),
-            ],
-            options={
-                'db_table': 'Included_products_list',
-                'unique_together': {('graph_id', 'product_id')},
-            },
-        ),
+       
     ]

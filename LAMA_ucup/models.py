@@ -113,10 +113,11 @@ class IncludedProducts(models.Model):
 
 class IncludedProductsList(models.Model):
     graph_id = models.BigIntegerField(db_column='Graph_id', blank=True, null=True)  # Field name made lowercase.
-    product_id = models.CharField(db_column='Product_id', blank=True, null=True)  # Field name made lowercase.
+    product_id = models.ForeignKey('Products', models.DO_NOTHING, db_column='Product_id', blank=True, null=True)  # Field name made lowercase.
     amount = models.FloatField(db_column='Amount', blank=True, null=True)  # Field name made lowercase.
     invoice_id = models.CharField(db_column='Invoice_id', blank=True, null=True)  # Field name made lowercase.
     inc_prod_list = models.BigAutoField(db_column='Inc_prod_list', primary_key=True)  # Field name made lowercase.
+    rec_id = models.ForeignKey('Venddoclines', models.DO_NOTHING, db_column='Rec_id', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
 
@@ -216,6 +217,7 @@ class KuGraph(models.Model):
     sum_calc = models.FloatField(db_column='Sum_calc', blank=True, null=True)  # Field name made lowercase.
     sum_bonus = models.FloatField(db_column='Sum_bonus', blank=True, null=True)  # Field name made lowercase.
     percent = models.IntegerField(db_column='Percent', blank=True, null=True)  # Field name made lowercase.
+    sum_approved = models.FloatField(db_column='Sum_approved', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         
@@ -234,9 +236,9 @@ class Products(models.Model):
 
 
 class Venddoc(models.Model):
-    vendor_id = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
-    entity_id = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
-    docid = models.CharField(db_column='DocID', blank=True, null=True)  # Field name made lowercase.
+    vendor = models.ForeignKey('Vendors', models.DO_NOTHING, db_column='Vendor_id')  # Field name made lowercase.
+    entity = models.ForeignKey(Entities, models.DO_NOTHING, db_column='Entity_id')  # Field name made lowercase.
+    docid = models.CharField(db_column='DocID', primary_key=True)  # Field name made lowercase.
     doctype = models.CharField(db_column='DocType')  # Field name made lowercase.
     invoice_name = models.CharField(db_column='Invoice_name')  # Field name made lowercase.
     invoice_number = models.CharField(db_column='Invoice_number')  # Field name made lowercase.
@@ -244,9 +246,9 @@ class Venddoc(models.Model):
     purch_number = models.CharField(db_column='Purch_number')  # Field name made lowercase.
     purch_date = models.DateField(db_column='Purch_date')  # Field name made lowercase.
     invoicestatus = models.CharField(db_column='InvoiceStatus', blank=True, null=True)  # Field name made lowercase.
-    invoice_id = models.BigAutoField(db_column='Invoice_id', primary_key=True)  # Field name made lowercase.
+    invoice_id = models.BigIntegerField(db_column='Invoice_id', null=True)  # Field name made lowercase.
     products_amount = models.FloatField(db_column='Products_amount', blank=True, null=True)  # Field name made lowercase.
-
+    
     class Meta:
        
         db_table = 'VendDoc'
@@ -261,7 +263,8 @@ class Venddoc(models.Model):
                         product_id = venddoclines_row.get('product_id'),
                         invoice_id = venddoclines_row.get('docid'),
                         amount = venddoclines_row.get('amount'),
-                        graph_id = graph_id
+                        graph_id = graph_id,
+                        rec_id =  venddoclines_row.get('rec_id')
 
                         # product_id=venddoclines_row.product_id,
                         # invoice_id=venddoclines_row.docid,
@@ -318,12 +321,14 @@ class Venddoc(models.Model):
 
 class Venddoclines(models.Model):
     recid = models.BigIntegerField(db_column='RecId', primary_key=True)  # Field name made lowercase.
-    docid = models.CharField(db_column='DocID', blank=True, null=True)  # Field name made lowercase.
+    docid = models.ForeignKey(Venddoc, models.DO_NOTHING, db_column='DocID', blank=True, null=True)  # Field name made lowercase.
     product_id = models.CharField(db_column='Product_id')  # Field name made lowercase.
     qty = models.FloatField(db_column='QTY')  # Field name made lowercase.
     amount = models.FloatField(db_column='Amount')  # Field name made lowercase.
     amountvat = models.FloatField(db_column='AmountVAT')  # Field name made lowercase.
     vat = models.FloatField(db_column='VAT')  # Field name made lowercase.
+    invoice_id = models.BigIntegerField(db_column='Invoice_id', blank=True, null=True)  # Field name made lowercase.
+
 
     class Meta:
         
